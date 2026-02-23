@@ -382,11 +382,11 @@ export default function WaterAdvisor() {
             Your advice
           </h2>
           <div style={{ marginBottom: '1rem' }}>
-            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>🌊 Today's water required</p>
+            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>Today's water required</p>
             <p style={{ margin: 0, fontSize: '1.25rem' }}>{Number(result.todayWater).toLocaleString()} L/acre</p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>📅 Tomorrow's recommendation</p>
+            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>Tomorrow's recommendation</p>
             <p style={{ margin: 0 }}>{Number(result.tomorrowWater).toLocaleString()} L/acre</p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
