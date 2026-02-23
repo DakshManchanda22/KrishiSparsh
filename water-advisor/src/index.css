@@ -33,6 +33,10 @@ body {
   }
 }
 
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
 button, input, select {
   font-family: inherit;
 }

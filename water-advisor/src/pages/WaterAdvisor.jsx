@@ -123,7 +123,10 @@ export default function WaterAdvisor() {
       })
       if (fnError) {
         const msg = fnError.message || (fnError.context?.body?.error) || String(fnError)
-        throw new Error(msg)
+        const hint = msg.toLowerCase().includes('fetch') || msg.toLowerCase().includes('send')
+          ? ' Check: Supabase URL and anon key in Vercel env, getWeather deployed, and CORS on the function.'
+          : ''
+        throw new Error(msg + hint)
       }
       if (data?.error) throw new Error(data.error)
       if (!data || typeof data.todayWater === 'undefined') {

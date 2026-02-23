@@ -45,6 +45,41 @@
     if (window.location.hash === '#water') {
       window.location.replace(window.location.pathname.replace(/\/$/, '') + '/water-advisor/');
     }
+    (function() {
+      var prefetched = false;
+      function prefetchWaterAdvisor() {
+        if (prefetched) return;
+        prefetched = true;
+        var link = document.createElement('link');
+        link.rel = 'prefetch';
+        link.href = document.querySelector('a[href*="water-advisor"]')?.getAttribute('href') || '/water-advisor/';
+        document.head.appendChild(link);
+      }
+      if (document.readyState === 'complete') {
+        setTimeout(prefetchWaterAdvisor, 100);
+      } else {
+        window.addEventListener('load', function() { setTimeout(prefetchWaterAdvisor, 200); });
+      }
+      document.addEventListener('mouseover', function(e) {
+        var a = e.target && e.target.closest && e.target.closest('a[href*="water-advisor"]');
+        if (a) prefetchWaterAdvisor();
+      }, { passive: true, once: false });
+      document.addEventListener('click', function(e) {
+        var a = e.target && e.target.closest && e.target.closest('a[href*="water-advisor"]');
+        if (!a || e.ctrlKey || e.metaKey || e.shiftKey || e.button !== 0) return;
+        e.preventDefault();
+        var url = a.getAttribute('href');
+        var overlay = document.createElement('div');
+        overlay.setAttribute('aria-live', 'polite');
+        overlay.style.cssText = 'position:fixed;inset:0;z-index:9999;background:rgba(15,23,42,0.9);display:flex;flex-direction:column;align-items:center;justify-content:center;gap:1rem;color:#fff;font-family:system-ui,sans-serif;';
+        overlay.innerHTML = '<div style="width:40px;height:40px;border:3px solid rgba(255,255,255,0.3);border-top-color:#fff;border-radius:50%;animation:spin 0.8s linear infinite"></div><span>Loading Water Advisor…</span>';
+        var style = document.createElement('style');
+        style.textContent = '@keyframes spin { to { transform: rotate(360deg); } }';
+        document.head.appendChild(style);
+        document.body.appendChild(overlay);
+        window.location.href = url;
+      }, true);
+    })();
   </script>
   <!-- Hero: height from image only; grid will start directly at its bottom -->
   <section id="home" class="relative w-full">
@@ -60,7 +95,7 @@
 
           <div class="hidden md:flex items-center justify-center gap-1 flex-1">
             <a href="#disease" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors">Disease Detection</a>
-            <a href="/water-advisor/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors">Water Advisor</a>
+            <a href="/water-advisor/" id="nav-water-advisor" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors">Water Advisor</a>
             <a href="#expenses" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors">Expenses</a>
             <a href="#schemes" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors">Schemes</a>
           </div>
