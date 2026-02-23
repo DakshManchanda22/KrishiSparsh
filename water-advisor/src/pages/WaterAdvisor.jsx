@@ -27,6 +27,11 @@ const TRANSLATIONS = {
     fetching: 'Fetching weather and calculating advice…',
     home: 'कृषिSparsh',
     langBtn: 'हिंदी',
+    navDisease: 'Disease Detection',
+    navWater: 'Water Advisor',
+    navExpenses: 'Expenses',
+    navSchemes: 'Schemes',
+    navJoin: 'Join Now',
   },
   hi: {
     title: 'स्मार्ट जल सलाहकार',
@@ -52,6 +57,11 @@ const TRANSLATIONS = {
     fetching: 'मौसम और सलाह गणना हो रही है…',
     home: 'कृषिSparsh',
     langBtn: 'English',
+    navDisease: 'रोग पहचान',
+    navWater: 'जल सलाहकार',
+    navExpenses: 'खर्च',
+    navSchemes: 'योजनाएं',
+    navJoin: 'अभी जुड़ें',
   },
 }
 
@@ -207,58 +217,42 @@ export default function WaterAdvisor() {
     }
   }
 
+  const sectionHref = (hash) => (hash ? `/#${hash}` : '/water-advisor/')
+
   return (
     <>
-      {/* Fixed top nav bar — always on top on every page */}
-      <header
-        style={{
-          position: 'fixed',
-          top: 0,
-          left: 0,
-          right: 0,
-          zIndex: 9999,
-          height: '56px',
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'space-between',
-          padding: '0 1rem',
-          background: 'rgba(111, 135, 75, 0.95)',
-          backdropFilter: 'saturate(180%) blur(12px)',
-          borderBottom: '2px solid rgba(45, 90, 39, 0.4)',
-          boxSizing: 'border-box',
-        }}
-      >
-        <a
-          href="/"
-          style={{
-            color: '#fff',
-            fontWeight: 'bold',
-            textDecoration: 'none',
-            fontSize: '1rem',
-          }}
-        >
-          {t('home')}
-        </a>
-        <button
-          type="button"
-          onClick={() => setLang(isHi ? 'en' : 'hi')}
-          style={{
-            fontSize: '0.75rem',
-            padding: '6px 12px',
-            borderRadius: '9999px',
-            border: '1px solid rgba(255,255,255,0.6)',
-            background: 'transparent',
-            color: '#fff',
-            cursor: 'pointer',
-            fontWeight: '500',
-          }}
-          aria-label={isHi ? 'Switch to English' : 'Switch to Hindi'}
-        >
-          {t('langBtn')}
-        </button>
+      {/* Full site nav — same as landing page, so you can jump between pages without going home */}
+      <header className="site-nav">
+        <div className="site-nav-inner">
+          <a href={homeHref} className="site-nav-logo" aria-label="Home">
+            <span className="site-nav-logo-icon" aria-hidden="true">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2zm0 11c-1.4 0-2.5-1.1-2.5-2.5S10.6 8 12 8s2.5 1.1 2.5 2.5S13.4 13 12 13z"/></svg>
+            </span>
+            <span className="site-nav-logo-text">{t('home')}</span>
+          </a>
+
+          <nav className="site-nav-links" aria-label="Main">
+            <a href={sectionHref('disease')}>{t('navDisease')}</a>
+            <a href="/water-advisor/" className="active">{t('navWater')}</a>
+            <a href={sectionHref('expenses')}>{t('navExpenses')}</a>
+            <a href={sectionHref('schemes')}>{t('navSchemes')}</a>
+          </nav>
+
+          <div className="site-nav-right">
+            <button
+              type="button"
+              className="site-nav-lang"
+              onClick={() => setLang(isHi ? 'en' : 'hi')}
+              aria-label={isHi ? 'Switch to English' : 'Switch to Hindi'}
+            >
+              {t('langBtn')}
+            </button>
+            <a href={sectionHref('join')} className="site-nav-join">{t('navJoin')}</a>
+          </div>
+        </div>
       </header>
 
-      <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '72px' }}>
+      <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '80px' }}>
       {/* 1. Heading */}
       <section style={{ ...sectionStyle, textAlign: 'center', padding: '2rem 1rem' }}>
         <h1
