@@ -1,18 +1,72 @@
 import { useState } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
+const LANG_KEY = 'krishisparsh_lang'
+const TRANSLATIONS = {
+  en: {
+    title: 'Smart Water Advisor',
+    subtitle: 'Get irrigation advice based on weather and crop stage.',
+    crop: 'Crop',
+    cropStage: 'Crop stage',
+    location: 'Location',
+    useLocation: 'Use My Current Location',
+    gettingLocation: 'Getting location…',
+    orCoords: 'Or enter coordinates:',
+    latitude: 'Latitude',
+    longitude: 'Longitude',
+    apply: 'Apply',
+    applied: '✓ Applied',
+    appliedHint: 'Coordinates applied. You can now click "Get irrigation advice".',
+    getAdvice: 'Get irrigation advice',
+    gettingAdvice: 'Getting advice…',
+    yourAdvice: 'Your advice',
+    todayWater: "Today's water required",
+    tomorrowWater: "Tomorrow's recommendation",
+    weatherSummary: 'Weather summary',
+    warning: 'Warning',
+    fetching: 'Fetching weather and calculating advice…',
+    home: 'कृषिSparsh',
+    langBtn: 'हिंदी',
+  },
+  hi: {
+    title: 'स्मार्ट जल सलाहकार',
+    subtitle: 'मौसम और फसल अवस्था के आधार पर सिंचाई सलाह पाएं।',
+    crop: 'फसल',
+    cropStage: 'फसल अवस्था',
+    location: 'स्थान',
+    useLocation: 'मेरा वर्तमान स्थान इस्तेमाल करें',
+    gettingLocation: 'स्थान मिल रहा है…',
+    orCoords: 'या अक्षांश/देशांतर दर्ज करें:',
+    latitude: 'अक्षांश',
+    longitude: 'देशांतर',
+    apply: 'लागू करें',
+    applied: '✓ लागू',
+    appliedHint: 'निर्देशांक लागू। अब "सिंचाई सलाह पाएं" पर क्लिक करें।',
+    getAdvice: 'सिंचाई सलाह पाएं',
+    gettingAdvice: 'सलाह मिल रही है…',
+    yourAdvice: 'आपकी सलाह',
+    todayWater: 'आज पानी की जरूरत',
+    tomorrowWater: 'कल की सिफारिश',
+    weatherSummary: 'मौसम सारांश',
+    warning: 'चेतावनी',
+    fetching: 'मौसम और सलाह गणना हो रही है…',
+    home: 'कृषिSparsh',
+    langBtn: 'English',
+  },
+}
+
 const CROPS = [
-  { value: 'rice', label: 'Rice' },
-  { value: 'wheat', label: 'Wheat' },
-  { value: 'tomato', label: 'Tomato' },
-  { value: 'sugarcane', label: 'Sugarcane' },
+  { value: 'rice', label: 'Rice', labelHi: 'चावल' },
+  { value: 'wheat', label: 'Wheat', labelHi: 'गेहूं' },
+  { value: 'tomato', label: 'Tomato', labelHi: 'टमाटर' },
+  { value: 'sugarcane', label: 'Sugarcane', labelHi: 'गन्ना' },
 ]
 
 const STAGES = [
-  { id: 'just_planted', label: 'Just Planted', range: '0–10 days', emoji: '🌱' },
-  { id: 'growing_leaves', label: 'Growing Leaves', range: '10–30 days', emoji: '🌿' },
-  { id: 'flowering', label: 'Flowering', range: '30–60 days', emoji: '🌸' },
-  { id: 'fruiting', label: 'Fruiting', range: '60+ days', emoji: '🍅' },
+  { id: 'just_planted', label: 'Just Planted', labelHi: 'अभी लगाया', range: '0–10 days', rangeHi: '0–10 दिन', emoji: '🌱' },
+  { id: 'growing_leaves', label: 'Growing Leaves', labelHi: 'पत्ते बढ़ रहे', range: '10–30 days', rangeHi: '10–30 दिन', emoji: '🌿' },
+  { id: 'flowering', label: 'Flowering', labelHi: 'फूल आ रहे', range: '30–60 days', rangeHi: '30–60 दिन', emoji: '🌸' },
+  { id: 'fruiting', label: 'Fruiting', labelHi: 'फल लग रहे', range: '60+ days', rangeHi: '60+ दिन', emoji: '🍅' },
 ]
 
 const sectionStyle = {
@@ -36,6 +90,17 @@ const buttonBase = {
 }
 
 export default function WaterAdvisor() {
+  const [lang, setLangState] = useState(() => {
+    if (typeof window !== 'undefined') return localStorage.getItem(LANG_KEY) || 'en'
+    return 'en'
+  })
+  const setLang = (l) => {
+    setLangState(l)
+    localStorage.setItem(LANG_KEY, l)
+  }
+  const t = (key) => TRANSLATIONS[lang]?.[key] ?? TRANSLATIONS.en[key] ?? key
+  const isHi = lang === 'hi'
+
   const [crop, setCrop] = useState('rice')
   const [stage, setStage] = useState(null)
   const [lat, setLat] = useState(null)
@@ -143,7 +208,57 @@ export default function WaterAdvisor() {
   }
 
   return (
-    <main style={{ maxWidth: '800px', margin: '0 auto' }}>
+    <>
+      {/* Fixed top nav bar — always on top on every page */}
+      <header
+        style={{
+          position: 'fixed',
+          top: 0,
+          left: 0,
+          right: 0,
+          zIndex: 9999,
+          height: '56px',
+          display: 'flex',
+          alignItems: 'center',
+          justifyContent: 'space-between',
+          padding: '0 1rem',
+          background: 'rgba(111, 135, 75, 0.95)',
+          backdropFilter: 'saturate(180%) blur(12px)',
+          borderBottom: '2px solid rgba(45, 90, 39, 0.4)',
+          boxSizing: 'border-box',
+        }}
+      >
+        <a
+          href="/"
+          style={{
+            color: '#fff',
+            fontWeight: 'bold',
+            textDecoration: 'none',
+            fontSize: '1rem',
+          }}
+        >
+          {t('home')}
+        </a>
+        <button
+          type="button"
+          onClick={() => setLang(isHi ? 'en' : 'hi')}
+          style={{
+            fontSize: '0.75rem',
+            padding: '6px 12px',
+            borderRadius: '9999px',
+            border: '1px solid rgba(255,255,255,0.6)',
+            background: 'transparent',
+            color: '#fff',
+            cursor: 'pointer',
+            fontWeight: '500',
+          }}
+          aria-label={isHi ? 'Switch to English' : 'Switch to Hindi'}
+        >
+          {t('langBtn')}
+        </button>
+      </header>
+
+      <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '72px' }}>
       {/* 1. Heading */}
       <section style={{ ...sectionStyle, textAlign: 'center', padding: '2rem 1rem' }}>
         <h1
@@ -155,23 +270,23 @@ export default function WaterAdvisor() {
             lineHeight: 1.6,
           }}
         >
-          Smart Water Advisor
+          {t('title')}
         </h1>
         <p style={{ margin: 0, fontSize: '1rem', color: '#2d5a27' }}>
-          Get irrigation advice based on weather and crop stage.
+          {t('subtitle')}
         </p>
       </section>
 
       {/* 2. Crop dropdown */}
       <section style={sectionStyle}>
         <label htmlFor="crop-select" style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>
-          Crop
+          {t('crop')}
         </label>
         <select
           id="crop-select"
           value={crop}
           onChange={(e) => setCrop(e.target.value)}
-          aria-label="Select crop type"
+          aria-label={t('crop')}
           style={{
             ...buttonBase,
             width: '100%',
@@ -182,14 +297,14 @@ export default function WaterAdvisor() {
           }}
         >
           {CROPS.map((c) => (
-            <option key={c.value} value={c.value}>{c.label}</option>
+            <option key={c.value} value={c.value}>{isHi ? c.labelHi : c.label}</option>
           ))}
         </select>
       </section>
 
       {/* 3. Crop stage cards */}
       <section style={sectionStyle}>
-        <p style={{ fontWeight: 'bold', marginBottom: '0.75rem' }}>Crop stage</p>
+        <p style={{ fontWeight: 'bold', marginBottom: '0.75rem' }}>{t('cropStage')}</p>
         <div
           role="group"
           aria-label="Crop stage selection"
@@ -206,7 +321,7 @@ export default function WaterAdvisor() {
               type="button"
               role="radio"
               aria-checked={stage === s.id}
-              aria-label={`${s.label}, ${s.range}`}
+              aria-label={`${isHi ? s.labelHi : s.label}, ${isHi ? s.rangeHi : s.range}`}
               onClick={() => setStage(s.id)}
               style={{
                 ...buttonBase,
@@ -222,9 +337,9 @@ export default function WaterAdvisor() {
               onMouseLeave={(e) => e.currentTarget.style.transform = ''}
             >
               <span style={{ fontSize: '1.5rem', marginRight: '0.5rem' }}>{s.emoji}</span>
-              <span style={{ fontWeight: 'bold' }}>{s.label}</span>
+              <span style={{ fontWeight: 'bold' }}>{isHi ? s.labelHi : s.label}</span>
               <span style={{ display: 'block', fontSize: '0.9rem', opacity: 0.9, marginTop: '0.25rem' }}>
-                {s.range}
+                {isHi ? s.rangeHi : s.range}
               </span>
             </button>
           ))}
@@ -242,12 +357,12 @@ export default function WaterAdvisor() {
 
       {/* 4. Location */}
       <section style={sectionStyle}>
-        <p style={{ fontWeight: 'bold', marginBottom: '0.75rem' }}>Location</p>
+        <p style={{ fontWeight: 'bold', marginBottom: '0.75rem' }}>{t('location')}</p>
         <button
           type="button"
           onClick={useLocation}
           disabled={locationLoading}
-          aria-label="Use my current location"
+          aria-label={t('useLocation')}
           style={{
             ...buttonBase,
             background: '#CCEEA6',
@@ -257,19 +372,19 @@ export default function WaterAdvisor() {
             maxWidth: '320px',
           }}
         >
-          {locationLoading ? 'Getting location…' : '📍 Use My Current Location'}
+          {locationLoading ? t('gettingLocation') : '📍 ' + t('useLocation')}
         </button>
         {locationError && (
           <p style={{ color: '#b45309', marginBottom: '0.75rem', fontWeight: '500' }}>{locationError}</p>
         )}
-        <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>Or enter coordinates:</p>
+        <p style={{ fontSize: '0.9rem', marginBottom: '0.5rem' }}>{t('orCoords')}</p>
         <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.5rem', alignItems: 'center' }}>
-          <label htmlFor="manual-lat" className="sr-only">Latitude</label>
+          <label htmlFor="manual-lat" className="sr-only">{t('latitude')}</label>
           <input
             id="manual-lat"
             type="text"
             inputMode="decimal"
-            placeholder="Latitude"
+            placeholder={t('latitude')}
             value={manualLat}
             onChange={(e) => setManualLat(e.target.value)}
             style={{
@@ -280,12 +395,12 @@ export default function WaterAdvisor() {
               fontSize: '1rem',
             }}
           />
-          <label htmlFor="manual-lon" className="sr-only">Longitude</label>
+          <label htmlFor="manual-lon" className="sr-only">{t('longitude')}</label>
           <input
             id="manual-lon"
             type="text"
             inputMode="decimal"
-            placeholder="Longitude"
+            placeholder={t('longitude')}
             value={manualLon}
             onChange={(e) => setManualLon(e.target.value)}
             style={{
@@ -337,7 +452,7 @@ export default function WaterAdvisor() {
             fontSize: '1.1rem',
           }}
         >
-          {loading ? 'Getting advice…' : 'Get irrigation advice'}
+          {loading ? t('gettingAdvice') : t('getAdvice')}
         </button>
         {error && (
           <p style={{ color: '#b45309', marginTop: '0.75rem', fontWeight: '500' }} role="alert">{error}</p>
@@ -360,7 +475,7 @@ export default function WaterAdvisor() {
               margin: '0 auto 0.5rem',
             }}
           />
-          <p style={{ margin: 0 }}>Fetching weather and calculating advice…</p>
+          <p style={{ margin: 0 }}>{t('fetching')}</p>
         </section>
       )}
 
@@ -379,18 +494,18 @@ export default function WaterAdvisor() {
           }}
         >
           <h2 style={{ fontFamily: "var(--font-pixel), monospace", fontSize: '0.875rem', marginTop: 0 }}>
-            Your advice
+            {t('yourAdvice')}
           </h2>
           <div style={{ marginBottom: '1rem' }}>
-            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>Today's water required</p>
+            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>{t('todayWater')}</p>
             <p style={{ margin: 0, fontSize: '1.25rem' }}>{Number(result.todayWater).toLocaleString()} L/acre</p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>Tomorrow's recommendation</p>
+            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>{t('tomorrowWater')}</p>
             <p style={{ margin: 0 }}>{Number(result.tomorrowWater).toLocaleString()} L/acre</p>
           </div>
           <div style={{ marginBottom: '1rem' }}>
-            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>🌤 Weather summary</p>
+            <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>🌤 {t('weatherSummary')}</p>
             <p style={{ margin: 0 }}>{result.weatherSummary}</p>
           </div>
           {result.warning && (
@@ -404,12 +519,13 @@ export default function WaterAdvisor() {
                 marginTop: '0.5rem',
               }}
             >
-              <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>⚠ Warning</p>
+              <p style={{ fontWeight: 'bold', margin: '0 0 0.25rem' }}>⚠ {t('warning')}</p>
               <p style={{ margin: 0 }}>{result.warning}</p>
             </div>
           )}
         </section>
       )}
     </main>
+    </>
   )
 }
