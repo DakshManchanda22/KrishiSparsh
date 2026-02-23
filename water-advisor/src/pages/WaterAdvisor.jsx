@@ -217,6 +217,7 @@ export default function WaterAdvisor() {
     }
   }
 
+  const homeHref = '/'
   const sectionHref = (hash) => (hash ? `/#${hash}` : '/water-advisor/')
 
   return (
