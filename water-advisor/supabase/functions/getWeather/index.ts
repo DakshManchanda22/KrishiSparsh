@@ -52,9 +52,9 @@ function jsonResponse(body: object, status: number): Response {
 }
 
 Deno.serve(async (req) => {
-  // CORS preflight — required for supabase.functions.invoke() from the browser
+  // CORS preflight — must be 200 OK with CORS headers or browser blocks with "does not have HTTP ok status"
   if (req.method === "OPTIONS") {
-    return new Response("ok", { headers: corsHeaders });
+    return new Response("ok", { status: 200, headers: corsHeaders });
   }
 
   if (req.method !== "POST") {
