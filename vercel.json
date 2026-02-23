@@ -1,0 +1,8 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": "dist",
+  "rewrites": [
+    { "source": "/water-advisor", "destination": "/water-advisor/" },
+    { "source": "/water-advisor/(.*)", "destination": "/water-advisor/index.html" }
+  ]
+}
