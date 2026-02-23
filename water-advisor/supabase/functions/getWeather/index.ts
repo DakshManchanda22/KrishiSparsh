@@ -44,29 +44,37 @@ function getTomorrowWater(
   return applyModifiers(base, temp, rainProb, humidity);
 }
 
+const corsHeaders = {
+  "Access-Control-Allow-Origin": "*",
+  "Access-Control-Allow-Methods": "POST, OPTIONS",
+  "Access-Control-Allow-Headers": "Content-Type, Authorization",
+};
+
+function jsonResponse(body: object, status: number) {
+  return new Response(JSON.stringify(body), {
+    status,
+    headers: { "Content-Type": "application/json", ...corsHeaders },
+  });
+}
+
 Deno.serve(async (req) => {
   if (req.method === "OPTIONS") {
-    return new Response(null, {
-      headers: {
-        "Access-Control-Allow-Origin": "*",
-        "Access-Control-Allow-Methods": "POST, OPTIONS",
-        "Access-Control-Allow-Headers": "Content-Type, Authorization",
-      },
-    });
+    return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const { lat, lon, crop, stage } = (await req.json()) as {
-      lat: number;
-      lon: number;
-      crop: string;
-      stage: string;
+    const body = await req.json().catch(() => null);
+    const { lat, lon, crop, stage } = (body || {}) as {
+      lat?: number;
+      lon?: number;
+      crop?: string;
+      stage?: string;
     };
 
     if (lat == null || lon == null || !crop || !stage) {
-      return new Response(
-        JSON.stringify({ error: "Missing lat, lon, crop, or stage" }),
-        { status: 400, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        { error: "Missing lat, lon, crop, or stage" },
+        400
       );
     }
 
@@ -74,9 +82,9 @@ Deno.serve(async (req) => {
     const res = await fetch(url);
     if (!res.ok) {
       const text = await res.text();
-      return new Response(
-        JSON.stringify({ error: `OpenWeather error: ${res.status} ${text}` }),
-        { status: 502, headers: { "Content-Type": "application/json" } }
+      return jsonResponse(
+        { error: `OpenWeather error: ${res.status}. Check OPENWEATHER_API_KEY in Supabase secrets.` },
+        502
       );
     }
 
@@ -84,10 +92,7 @@ Deno.serve(async (req) => {
     const list = data?.list ?? [];
     const now = list[0];
     if (!now) {
-      return new Response(
-        JSON.stringify({ error: "No forecast data" }),
-        { status: 502, headers: { "Content-Type": "application/json" } }
-      );
+      return jsonResponse({ error: "No forecast data" }, 502);
     }
 
     const currentTemp = now.main?.temp ?? 25;
@@ -125,25 +130,16 @@ Deno.serve(async (req) => {
       warning = "Rain probability over 60%. Irrigation reduced. Consider skipping or delaying watering.";
     }
 
-    return new Response(
-      JSON.stringify({
-        todayWater,
-        tomorrowWater,
-        weatherSummary,
-        warning,
-      }),
-      {
-        status: 200,
-        headers: {
-          "Content-Type": "application/json",
-          "Access-Control-Allow-Origin": "*",
-        },
-      }
-    );
+    return jsonResponse({
+      todayWater,
+      tomorrowWater,
+      weatherSummary,
+      warning,
+    }, 200);
   } catch (e) {
-    return new Response(
-      JSON.stringify({ error: String(e?.message ?? e) }),
-      { status: 500, headers: { "Content-Type": "application/json" } }
+    return jsonResponse(
+      { error: String((e as Error)?.message ?? e) },
+      500
     );
   }
 });

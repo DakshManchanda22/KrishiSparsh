@@ -1,5 +1,5 @@
 import { useState } from 'react'
-import { supabase } from '../lib/supabase'
+import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const CROPS = [
   { value: 'rice', label: 'Rice' },
@@ -47,6 +47,7 @@ export default function WaterAdvisor() {
   const [result, setResult] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [appliedFeedback, setAppliedFeedback] = useState(false)
 
   const useLocation = () => {
     setLocationError(null)
@@ -79,21 +80,30 @@ export default function WaterAdvisor() {
     const lonNum = parseFloat(manualLon)
     if (!Number.isFinite(latNum) || !Number.isFinite(lonNum)) {
       setLocationError('Enter valid latitude and longitude.')
+      setAppliedFeedback(false)
       return
     }
     if (latNum < -90 || latNum > 90 || lonNum < -180 || lonNum > 180) {
       setLocationError('Latitude must be -90 to 90. Longitude must be -180 to 180.')
+      setAppliedFeedback(false)
       return
     }
     setLat(latNum)
     setLon(lonNum)
     setLocationError(null)
+    setError(null)
+    setAppliedFeedback(true)
+    setTimeout(() => setAppliedFeedback(false), 2000)
   }
 
   const currentLat = lat ?? (manualLat ? parseFloat(manualLat) : null)
   const currentLon = lon ?? (manualLon ? parseFloat(manualLon) : null)
 
   const getAdvice = async () => {
+    if (!isSupabaseConfigured()) {
+      setError('Supabase is not configured. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY in Vercel (or .env).')
+      return
+    }
     if (!stage) {
       setError('Please select a crop stage.')
       return
@@ -101,7 +111,7 @@ export default function WaterAdvisor() {
     const useLat = currentLat
     const useLon = currentLon
     if (useLat == null || useLon == null || !Number.isFinite(useLat) || !Number.isFinite(useLon)) {
-      setError('Please set your location (Use current location or enter latitude/longitude).')
+      setError('Please set your location (Use current location or enter latitude/longitude, then click Apply).')
       return
     }
     setError(null)
@@ -111,11 +121,18 @@ export default function WaterAdvisor() {
       const { data, error: fnError } = await supabase.functions.invoke('getWeather', {
         body: { lat: useLat, lon: useLon, crop, stage },
       })
-      if (fnError) throw fnError
+      if (fnError) {
+        const msg = fnError.message || (fnError.context?.body?.error) || String(fnError)
+        throw new Error(msg)
+      }
       if (data?.error) throw new Error(data.error)
+      if (!data || typeof data.todayWater === 'undefined') {
+        throw new Error('Invalid response from server. Check Supabase Edge Function and OpenWeather API key.')
+      }
       setResult(data)
     } catch (err) {
-      setError(err.message || 'Failed to get advice. Try again.')
+      const message = err?.message || 'Failed to get advice. Try again.'
+      setError(message)
       setResult(null)
     } finally {
       setLoading(false)
@@ -281,14 +298,19 @@ export default function WaterAdvisor() {
             onClick={applyManualCoords}
             style={{
               ...buttonBase,
-              background: '#FFDC97',
+              background: appliedFeedback ? '#A8EB9D' : '#FFDC97',
               color: '#1a3d16',
               padding: '10px 16px',
             }}
           >
-            Apply
+            {appliedFeedback ? '✓ Applied' : 'Apply'}
           </button>
         </div>
+        {appliedFeedback && (
+          <p style={{ marginTop: '0.5rem', fontSize: '0.9rem', color: '#2d5a27', fontWeight: '500' }}>
+            Coordinates applied. You can now click &quot;Get irrigation advice&quot;.
+          </p>
+        )}
         {(currentLat != null && currentLon != null) && (
           <p style={{ marginTop: '0.75rem', fontSize: '0.9rem', color: '#2d5a27' }}>
             Coordinates: {Number(currentLat).toFixed(5)}, {Number(currentLon).toFixed(5)}

@@ -47,3 +47,19 @@ git push origin main
 - [ ] Vercel project from repo root, **no** Root Directory
 - [ ] `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` set in Vercel
 - [ ] Deploy succeeded; click “Water Advisor” in the nav or open `/#water`
+
+---
+
+## Troubleshooting
+
+**“Failed to send to edge function”**
+
+- **Supabase not configured:** If you see “Supabase is not configured…”, add `VITE_SUPABASE_URL` and `VITE_SUPABASE_ANON_KEY` in Vercel (Project → Settings → Environment Variables), then redeploy.
+- **Wrong URL or key:** Use the exact values from Supabase Dashboard → Settings → API (Project URL and anon public key). No trailing slash on the URL.
+- **Function not deployed:** In Supabase Dashboard → Edge Functions, ensure `getWeather` is deployed. Set secret `OPENWEATHER_API_KEY` (Settings → Edge Functions → Secrets or via CLI).
+- **OpenWeather error:** If the function runs but returns an error, the message may mention OpenWeather — add or fix `OPENWEATHER_API_KEY` in Supabase Edge Function secrets.
+
+**“Apply” does nothing / coordinates not used**
+
+- Enter latitude/longitude (or use “Use My Current Location”), then click **Apply**. You should see “✓ Applied” and the message “Coordinates applied. You can now click Get irrigation advice.” Then click **Get irrigation advice**.
+- If nothing appears, check the browser console (F12 → Console) for JavaScript errors.
