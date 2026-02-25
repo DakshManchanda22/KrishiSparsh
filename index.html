@@ -2,13 +2,15 @@
 <html lang="en" id="html-lang">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover" />
   <title>कृषिSparsh – Smart Agriculture for Farmers</title>
-  <script src="https://cdn.tailwindcss.com"></script>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" />
+  <link rel="preload" href="tractoronfield.jpg" as="image" />
+  <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
+  <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" /></noscript>
   <link rel="stylesheet" href="styles.css" />
+  <script src="https://cdn.tailwindcss.com" defer></script>
   <script>
     tailwind.config = {
       theme: {
@@ -40,7 +42,7 @@
     }
   </script>
 </head>
-<body class="bg-surface text-primary font-sans antialiased min-h-screen">
+<body class="bg-surface text-primary font-sans antialiased min-h-screen overflow-x-hidden">
   <script>
     if (window.location.hash === '#water') {
       window.location.replace(window.location.pathname.replace(/\/$/, '') + '/water-advisor/');
@@ -58,7 +60,7 @@
             <span class="nav-brand text-lg font-semibold text-white hidden sm:inline">कृषिSparsh</span>
           </a>
 
-          <div class="hidden md:flex items-center justify-center gap-1 flex-1">
+          <div id="nav-links-desktop" class="hidden md:flex items-center justify-center gap-1 flex-1">
             <a href="#disease" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.disease">Disease Detection</a>
             <a href="/water-advisor/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.water">Water Advisor</a>
             <a href="#expenses" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.expenses">Expenses</a>
@@ -67,21 +69,34 @@
 
           <div class="flex items-center gap-2">
             <button type="button" id="lang-toggle" class="text-xs font-medium px-3 py-1.5 rounded-full border border-white/60 text-white hover:bg-white/20 transition-colors" aria-label="Switch language" title="हिंदी / English">हिंदी</button>
-            <button type="button" class="md:hidden p-2 rounded-2xl text-white hover:text-green-light transition-colors" aria-label="Menu">
-              <svg class="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+            <button type="button" id="mobile-menu-btn" class="md:hidden p-2 rounded-2xl text-white hover:text-green-light transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Menu" aria-expanded="false">
+              <svg class="w-6 h-6 menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
+              <svg class="w-6 h-6 menu-icon-close hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <a href="#join" class="inline-flex items-center justify-center px-6 py-3 rounded-full bg-green-deep text-white font-semibold shadow-clay hover:shadow-card-hover transition-shadow focus:outline-none focus:ring-2 focus:ring-green-deep focus:ring-offset-2 focus:ring-offset-white/20" data-i18n="nav.join">Join Now</a>
+            <a href="#join" class="inline-flex items-center justify-center px-4 sm:px-6 py-3 rounded-full bg-green-deep text-white font-semibold shadow-clay hover:shadow-card-hover transition-shadow focus:outline-none focus:ring-2 focus:ring-green-deep focus:ring-offset-2 focus:ring-offset-white/20 text-sm sm:text-base min-h-[44px]" data-i18n="nav.join">Join Now</a>
           </div>
+        </div>
+        <!-- Mobile menu: full-width dropdown, shown when hamburger clicked -->
+        <div id="mobile-menu" class="mobile-nav md:hidden" aria-hidden="true">
+          <a href="#disease" class="mobile-nav-link" data-i18n="nav.disease">Disease Detection</a>
+          <a href="/water-advisor/" class="mobile-nav-link" data-i18n="nav.water">Water Advisor</a>
+          <a href="#expenses" class="mobile-nav-link" data-i18n="nav.expenses">Expenses</a>
+          <a href="#schemes" class="mobile-nav-link" data-i18n="nav.schemes">Schemes</a>
+        </div>
         </div>
       </nav>
     </header>
 
-    <!-- Hero image in flow: section height = image height; grid starts at this edge -->
+    <!-- Hero image: high priority, decode async; loads first for LCP -->
     <div class="relative w-full">
       <img
         src="tractoronfield.jpg"
         alt="Tractor on field"
         class="w-full h-auto object-cover block"
+        fetchpriority="high"
+        decoding="async"
+        width="1920"
+        height="1080"
       />
       <div class="absolute inset-0 bg-gradient-to-b from-black/40 to-transparent pointer-events-none"></div>
       <div class="absolute inset-0 bg-gradient-to-b from-surface/20 via-transparent to-surface/40 pointer-events-none"></div>
@@ -148,93 +163,93 @@
   </div>
 
   <!-- Grid section: starts directly at hero end (negative margin); pt-40 so three cards sit fully below big card -->
-  <section id="grid-cards" class="relative z-10 bg-white -mt-[18rem] pt-80 pb-16 lg:pb-24">
+  <section id="grid-cards" class="relative z-10 bg-white grid-section-spacing pb-16 lg:pb-24">
     <!-- Grid pattern: thin lines, fades from full opacity at top to 0% at bottom -->
     <div class="absolute inset-0 z-0 grid-pattern grid-pattern-fade min-h-[120vh]"></div>
     <div class="relative z-10 w-full px-0">
       <div class="cards-carousel-wrap">
         <div class="cards-carousel-track">
           <!-- 7 crop cards, duplicated for seamless loop; 3 visible at a time -->
-          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('soyabean.avif');">
+          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('soyabean.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.soybean.title">How to get the best Soybean produce</h3>
             <p class="tall-card-desc" data-i18n="card.soybean.desc">Soil, seed rate, fertiliser and drip irrigation tips for maximum soybean returns.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('wheat.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('wheat.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.wheat.title">7 tips to get the best Wheat produce</h3>
             <p class="tall-card-desc" data-i18n="card.wheat.desc">Seeding, irrigation schedule and fertilisation for a high wheat yield.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('tomato.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('tomato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.tomato.title">7 tips to Get the Best Tomato Yield</h3>
             <p class="tall-card-desc" data-i18n="card.tomato.desc">Sunlight, spacing, watering and mulching for plump, healthy tomatoes.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('potato.jpg');">
+          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('potato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.potato.title">Potato – diseases and symptoms</h3>
             <p class="tall-card-desc" data-i18n="card.potato.desc">Late blight, bacterial wilt and blackheart: control and management.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.sugarcane.title">Tips on increasing sugarcane yield</h3>
             <p class="tall-card-desc" data-i18n="card.sugarcane.desc">Drip irrigation, soil, nutrients and intercropping for better sugarcane.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('onion.jpg');">
+          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('onion.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.onion.title">Important Tips On Onion Farming</h3>
             <p class="tall-card-desc" data-i18n="card.onion.desc">Water management, drip irrigation and export-quality onion practices.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.cotton.title">Cotton farming – the success story</h3>
             <p class="tall-card-desc" data-i18n="card.cotton.desc">Drip irrigation and modern techniques for higher cotton yield.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
           <!-- Duplicate set for seamless loop -->
-          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('soyabean.avif');">
+          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('soyabean.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.soybean.title">How to get the best Soybean produce</h3>
             <p class="tall-card-desc" data-i18n="card.soybean.desc">Soil, seed rate, fertiliser and drip irrigation tips for maximum soybean returns.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('wheat.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('wheat.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.wheat.title">7 tips to get the best Wheat produce</h3>
             <p class="tall-card-desc" data-i18n="card.wheat.desc">Seeding, irrigation schedule and fertilisation for a high wheat yield.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('tomato.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('tomato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.tomato.title">7 tips to Get the Best Tomato Yield</h3>
             <p class="tall-card-desc" data-i18n="card.tomato.desc">Sunlight, spacing, watering and mulching for plump, healthy tomatoes.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('potato.jpg');">
+          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('potato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.potato.title">Potato – diseases and symptoms</h3>
             <p class="tall-card-desc" data-i18n="card.potato.desc">Late blight, bacterial wilt and blackheart: control and management.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.sugarcane.title">Tips on increasing sugarcane yield</h3>
             <p class="tall-card-desc" data-i18n="card.sugarcane.desc">Drip irrigation, soil, nutrients and intercropping for better sugarcane.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('onion.jpg');">
+          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('onion.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.onion.title">Important Tips On Onion Farming</h3>
             <p class="tall-card-desc" data-i18n="card.onion.desc">Water management, drip irrigation and export-quality onion practices.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark" style="background-image: url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.cotton.title">Cotton farming – the success story</h3>
             <p class="tall-card-desc" data-i18n="card.cotton.desc">Drip irrigation and modern techniques for higher cotton yield.</p>
@@ -245,6 +260,57 @@
     </div>
   </section>
 
+  <script>
+    (function () {
+      var cards = document.querySelectorAll('.tall-card-lazy[data-bg]');
+      if (cards.length && 'IntersectionObserver' in window) {
+        var io = new IntersectionObserver(function (entries) {
+          entries.forEach(function (entry) {
+            if (!entry.isIntersecting) return;
+            var el = entry.target;
+            var bg = el.getAttribute('data-bg');
+            if (bg) { el.style.backgroundImage = bg; el.removeAttribute('data-bg'); el.classList.remove('tall-card-lazy'); }
+            io.unobserve(el);
+          });
+        }, { rootMargin: '100px', threshold: 0.01 });
+        cards.forEach(function (el) { io.observe(el); });
+      } else {
+        cards.forEach(function (el) {
+          var bg = el.getAttribute('data-bg');
+          if (bg) { el.style.backgroundImage = bg; el.removeAttribute('data-bg'); el.classList.remove('tall-card-lazy'); }
+        });
+      }
+    })();
+  </script>
+  <script>
+    (function () {
+      var btn = document.getElementById('mobile-menu-btn');
+      var nav = document.getElementById('main-nav');
+      var menu = document.getElementById('mobile-menu');
+      if (btn && nav && menu) {
+        function openMenu() {
+          nav.classList.add('mobile-menu-open');
+          btn.setAttribute('aria-expanded', 'true');
+          menu.setAttribute('aria-hidden', 'false');
+        }
+        function closeMenu() {
+          nav.classList.remove('mobile-menu-open');
+          btn.setAttribute('aria-expanded', 'false');
+          menu.setAttribute('aria-hidden', 'true');
+        }
+        btn.addEventListener('click', function () {
+          if (nav.classList.contains('mobile-menu-open')) closeMenu();
+          else openMenu();
+        });
+        menu.querySelectorAll('.mobile-nav-link').forEach(function (link) {
+          link.addEventListener('click', closeMenu);
+        });
+        document.addEventListener('click', function (e) {
+          if (nav.classList.contains('mobile-menu-open') && !nav.contains(e.target)) closeMenu();
+        });
+      }
+    })();
+  </script>
   <script>
     (function () {
       var LANG_KEY = 'krishisparsh_lang';
