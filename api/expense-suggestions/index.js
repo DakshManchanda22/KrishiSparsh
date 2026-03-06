@@ -58,4 +58,4 @@ ${landAcres != null && landAcres !== '' ? `Land (acres): ${landAcres}` : ''}`;
   } catch (e) {
     return res.status(500).json({ error: e.message || 'Server error' });
   }
-}
+};

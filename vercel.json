@@ -1,6 +1,10 @@
 {
   "buildCommand": "npm run build",
   "outputDirectory": "dist",
+  "functions": {
+    "api/scan-bill/index.js": { "runtime": "nodejs20.x" },
+    "api/expense-suggestions/index.js": { "runtime": "nodejs20.x" }
+  },
   "rewrites": [
     { "source": "/water-advisor", "destination": "/water-advisor/" },
     { "source": "/water-advisor/(.*)", "destination": "/water-advisor/index.html" },
