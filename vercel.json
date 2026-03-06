@@ -7,6 +7,8 @@
     { "source": "/expenses", "destination": "/expenses/" },
     { "source": "/expenses/(.*)", "destination": "/expenses/index.html" },
     { "source": "/disease-detection", "destination": "/disease-detection/" },
-    { "source": "/disease-detection/(.*)", "destination": "/disease-detection/index.html" }
+    { "source": "/disease-detection/(.*)", "destination": "/disease-detection/index.html" },
+    { "source": "/schemes", "destination": "/schemes/" },
+    { "source": "/schemes/(.*)", "destination": "/schemes/index.html" }
   ]
 }

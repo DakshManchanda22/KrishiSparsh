@@ -503,7 +503,7 @@ export default function ExpenseScanner() {
             <a href="/#disease">{t.navDisease}</a>
             <a href="/water-advisor/">{t.navWater}</a>
             <a href="/expenses/" className="active">{t.navExpenses}</a>
-            <a href="/#schemes">{t.navSchemes}</a>
+            <a href="/schemes/">{t.navSchemes}</a>
           </nav>
           <div className="site-nav-right">
             <button type="button" className="site-nav-join" aria-label="Language" onClick={toggleLang}>{t.langBtn}</button>

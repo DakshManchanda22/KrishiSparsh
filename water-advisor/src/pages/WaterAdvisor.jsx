@@ -236,7 +236,7 @@ export default function WaterAdvisor() {
             <a href={sectionHref('disease')}>{t('navDisease')}</a>
             <a href="/water-advisor/" className="active">{t('navWater')}</a>
             <a href="/expenses/">{t('navExpenses')}</a>
-            <a href={sectionHref('schemes')}>{t('navSchemes')}</a>
+            <a href="/schemes/">{t('navSchemes')}</a>
           </nav>
 
           <div className="site-nav-right">

@@ -52,6 +52,9 @@
     if (window.location.hash === '#disease') {
       window.location.replace(window.location.pathname.replace(/\/$/, '') + '/disease-detection/');
     }
+    if (window.location.hash === '#schemes') {
+      window.location.replace(window.location.pathname.replace(/\/$/, '') + '/schemes/');
+    }
   </script>
   <!-- Hero: height from image only; grid will start directly at its bottom -->
   <section id="home" class="relative w-full">
@@ -64,7 +67,7 @@
             <a href="/disease-detection/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.disease">Disease Detection</a>
             <a href="/water-advisor/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.water">Water Advisor</a>
             <a href="/expenses/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.expenses">Expenses</a>
-            <a href="#schemes" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.schemes">Schemes</a>
+            <a href="/schemes/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.schemes">Schemes</a>
           </div>
 
           <div class="flex items-center gap-2">
@@ -80,7 +83,7 @@
           <a href="/disease-detection/" class="mobile-nav-link" data-i18n="nav.disease">Disease Detection</a>
           <a href="/water-advisor/" class="mobile-nav-link" data-i18n="nav.water">Water Advisor</a>
           <a href="/expenses/" class="mobile-nav-link" data-i18n="nav.expenses">Expenses</a>
-          <a href="#schemes" class="mobile-nav-link" data-i18n="nav.schemes">Schemes</a>
+          <a href="/schemes/" class="mobile-nav-link" data-i18n="nav.schemes">Schemes</a>
         </div>
         </div>
       </nav>

@@ -107,7 +107,7 @@ export default function DiseaseDetection() {
             <a href="/disease-detection/" className="active">Disease Detection</a>
             <a href="/water-advisor/">Water Advisor</a>
             <a href="/expenses/">Expenses</a>
-            <a href="/#schemes">Schemes</a>
+            <a href="/schemes/">Schemes</a>
           </nav>
         </div>
       </header>
