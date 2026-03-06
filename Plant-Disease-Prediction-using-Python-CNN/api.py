@@ -23,6 +23,11 @@ from torchvision import transforms
 from model import CNN_NeuralNet
 from classes import CLASSES
 
+# Checkpoint was saved from a notebook where the class lived in __main__.
+# Make it findable so torch.load can unpickle the file.
+import __main__
+__main__.CNN_NeuralNet = CNN_NeuralNet
+
 CORS_ORIGINS = [
     "https://krishi-sparsh.vercel.app",
     "https://www.krishi-sparsh.vercel.app",
@@ -102,12 +107,15 @@ def get_model():
                 f"Model file not found: {MODEL_PATH}. "
                 "Extract FinalModel.pth from FinalModel.zip or FinalModel.rar."
             )
-        model = CNN_NeuralNet(in_channels=3, num_diseases=len(CLASSES))
-        state = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
-        if isinstance(state, dict) and "state_dict" in state:
-            model.load_state_dict(state["state_dict"], strict=True)
+        loaded = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
+        if isinstance(loaded, torch.nn.Module):
+            model = loaded
         else:
-            model.load_state_dict(state, strict=True)
+            model = CNN_NeuralNet(in_channels=3, num_diseases=len(CLASSES))
+            if isinstance(loaded, dict) and "state_dict" in loaded:
+                model.load_state_dict(loaded["state_dict"], strict=True)
+            else:
+                model.load_state_dict(loaded, strict=True)
         model.to(DEVICE)
         model.eval()
         _model = model

@@ -10,6 +10,10 @@ from torchvision import transforms
 from model import CNN_NeuralNet
 from classes import CLASSES
 
+# Checkpoint may have been saved from a notebook (__main__.CNN_NeuralNet)
+import __main__
+__main__.CNN_NeuralNet = CNN_NeuralNet
+
 # Match training: ImageFolder with ToTensor(); dataset images were 256x256
 INFERENCE_TRANSFORM = transforms.Compose([
     transforms.Resize((256, 256)),
@@ -21,13 +25,16 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 
 def load_model(path: str = MODEL_PATH):
-    """Load trained model. Supports full checkpoint or state_dict only."""
-    model = CNN_NeuralNet(in_channels=3, num_diseases=len(CLASSES))
-    state = torch.load(path, map_location=DEVICE, weights_only=False)
-    if isinstance(state, dict) and "state_dict" in state:
-        model.load_state_dict(state["state_dict"], strict=True)
+    """Load trained model. Supports full model pickle or state_dict only."""
+    loaded = torch.load(path, map_location=DEVICE, weights_only=False)
+    if isinstance(loaded, torch.nn.Module):
+        model = loaded
     else:
-        model.load_state_dict(state, strict=True)
+        model = CNN_NeuralNet(in_channels=3, num_diseases=len(CLASSES))
+        if isinstance(loaded, dict) and "state_dict" in loaded:
+            model.load_state_dict(loaded["state_dict"], strict=True)
+        else:
+            model.load_state_dict(loaded, strict=True)
     model.to(DEVICE)
     model.eval()
     return model
