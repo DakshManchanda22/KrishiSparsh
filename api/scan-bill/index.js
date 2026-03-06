@@ -1,5 +1,5 @@
-const GEMINI_UPLOAD_URL = 'https://generativelanguage.googleapis.com/upload/v1beta/files';
-const GEMINI_GENERATE_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-2.0-flash:generateContent';
+const GEMINI_MODEL = 'gemini-3-flash-preview';
+const GEMINI_GENERATE_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 const IMAGE_PROMPT = 'You are an expert at reading retail/farm bills. Look at the bill image and extract every line item. Classify each item into exactly one category: fertilizer, seed, labour, pesticide, transport, other. Return a valid JSON object only, no markdown, with keys: categories (object with fertilizer, seed, labour, pesticide, transport, other as arrays of {name, quantity, unit, amount}), and total (number or null). Use empty arrays for empty categories.';
 
@@ -15,43 +15,21 @@ function cors(res, req) {
   res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
 }
 
-async function uploadFileToGemini(key, imageBuffer, mimeType) {
-  const numBytes = imageBuffer.length;
-  const displayName = 'bill-' + Date.now() + (mimeType === 'image/png' ? '.png' : '.jpg');
-  const startRes = await fetch(`${GEMINI_UPLOAD_URL}?key=${encodeURIComponent(key)}`, {
-    method: 'POST',
-    headers: {
-      'Content-Type': 'application/json',
-      'X-Goog-Upload-Protocol': 'resumable',
-      'X-Goog-Upload-Command': 'start',
-      'X-Goog-Upload-Header-Content-Length': String(numBytes),
-      'X-Goog-Upload-Header-Content-Type': mimeType,
-    },
-    body: JSON.stringify({ file: { display_name: displayName } }),
-  });
-  if (!startRes.ok) {
-    const t = await startRes.text();
-    throw new Error('Upload start failed: ' + t);
+async function callGemini(key, body, retries = 2) {
+  const url = `${GEMINI_GENERATE_URL}?key=${encodeURIComponent(key)}`;
+  for (let attempt = 1; attempt <= retries; attempt++) {
+    const response = await fetch(url, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body),
+    });
+    if (response.status === 429 && attempt < retries) {
+      await new Promise((r) => setTimeout(r, 2000));
+      continue;
+    }
+    return response;
   }
-  const uploadUrl = startRes.headers.get('x-goog-upload-url');
-  if (!uploadUrl) throw new Error('No upload URL in response');
-  const uploadRes = await fetch(uploadUrl, {
-    method: 'POST',
-    headers: {
-      'Content-Length': String(numBytes),
-      'X-Goog-Upload-Offset': '0',
-      'X-Goog-Upload-Command': 'upload, finalize',
-    },
-    body: imageBuffer,
-  });
-  if (!uploadRes.ok) {
-    const t = await uploadRes.text();
-    throw new Error('Upload finalize failed: ' + t);
-  }
-  const uploadJson = await uploadRes.json();
-  const fileUri = uploadJson?.file?.uri;
-  if (!fileUri) throw new Error('No file URI in upload response');
-  return fileUri;
+  return null;
 }
 
 module.exports = async function handler(req, res) {
@@ -75,36 +53,29 @@ module.exports = async function handler(req, res) {
     parts = [{ text: TEXT_PROMPT + billText.trim() }];
   } else if (imageBase64) {
     const base64Data = imageBase64.replace(/^data:image\/\w+;base64,/, '');
-    const imageBuffer = Buffer.from(base64Data, 'base64');
-    let fileUri;
-    try {
-      fileUri = await uploadFileToGemini(key, imageBuffer, mimeType);
-    } catch (uploadErr) {
-      return res.status(502).json({ error: 'File upload failed', details: uploadErr.message });
-    }
     parts = [
-      { file_data: { mime_type: mimeType, file_uri: fileUri } },
+      { inline_data: { mime_type: mimeType, data: base64Data } },
       { text: IMAGE_PROMPT },
     ];
   } else {
     return res.status(400).json({ error: 'Either "text" or "imageBase64" required' });
   }
 
+  const requestBody = {
+    contents: [{ role: 'user', parts }],
+    generationConfig: {
+      temperature: 0.1,
+      responseMimeType: 'application/json',
+    },
+  };
+
   try {
-    const response = await fetch(`${GEMINI_GENERATE_URL}?key=${encodeURIComponent(key)}`, {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts }],
-        generationConfig: {
-          temperature: 0.1,
-          responseMimeType: 'application/json',
-        },
-      }),
-    });
+    const response = await callGemini(key, requestBody);
+    if (!response) return res.status(429).json({ error: 'Rate limit exceeded. Please try again in a minute.' });
     if (!response.ok) {
       const err = await response.text();
-      return res.status(response.status).json({ error: 'Gemini request failed', details: err });
+      const msg = response.status === 429 ? 'Rate limit exceeded (429). Wait a minute and try again.' : 'Gemini request failed';
+      return res.status(response.status).json({ error: msg, details: err });
     }
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;

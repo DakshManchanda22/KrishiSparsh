@@ -1,4 +1,5 @@
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
+const GEMINI_MODEL = 'gemini-3-flash-preview';
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`;
 
 function cors(res, req) {
   const origin = req.headers.origin || '*';
@@ -33,21 +34,32 @@ ${totalThisMonth != null ? `Total this month (₹): ${totalThisMonth}` : ''}
 ${lastMonthTotal != null ? `Last month total (₹): ${lastMonthTotal}` : ''}
 ${landAcres != null && landAcres !== '' ? `Land (acres): ${landAcres}` : ''}`;
 
+  const requestBody = {
+    contents: [{ role: 'user', parts: [{ text: prompt }] }],
+    generationConfig: {
+      temperature: 0.3,
+      responseMimeType: 'application/json',
+    },
+  };
+
   try {
-    const response = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+    let response = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({
-        contents: [{ role: 'user', parts: [{ text: prompt }] }],
-        generationConfig: {
-          temperature: 0.3,
-          responseMimeType: 'application/json',
-        },
-      }),
+      body: JSON.stringify(requestBody),
     });
+    if (response.status === 429) {
+      await new Promise((r) => setTimeout(r, 2000));
+      response = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(requestBody),
+      });
+    }
     if (!response.ok) {
       const err = await response.text();
-      return res.status(response.status).json({ error: 'Gemini request failed', details: err });
+      const msg = response.status === 429 ? 'Rate limit exceeded. Wait a minute and try again.' : 'Gemini request failed';
+      return res.status(response.status).json({ error: msg, details: err });
     }
     const data = await response.json();
     const text = data?.candidates?.[0]?.content?.parts?.[0]?.text;
