@@ -101,7 +101,8 @@ export default function SchemesChat() {
         throw new Error(t || `Request failed (${res.status})`)
       }
       const data = await res.json()
-      setResult(data.text || data.response || 'No suggestions returned.')
+      const raw = data.text || data.response || 'No suggestions returned.'
+      setResult(raw.replace(/\*\*/g, ''))
       setStep(QUESTIONS.length)
     } catch (err) {
       setError(err.message || 'Could not get scheme suggestions. Try again.')
@@ -214,9 +215,11 @@ export default function SchemesChat() {
         )}
 
         {!loading && result && (
-          <section className="chat-section">
+          <section className="chat-section chat-section--result">
             <p className="chat-question">Schemes that may help you:</p>
-            <p className="chat-response">{result}</p>
+            <div className="chat-response-wrap">
+              <p className="chat-response">{result}</p>
+            </div>
             <div className="chat-buttons-row" style={{ marginTop: '1rem' }}>
               <button
                 type="button"

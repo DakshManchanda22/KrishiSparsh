@@ -138,10 +138,21 @@ button, a { min-height: 44px; min-width: 44px; }
   margin-bottom: 0.75rem;
 }
 
+.chat-section--result {
+  min-height: 0;
+  overflow: visible;
+}
+
+.chat-response-wrap {
+  min-height: 0;
+  overflow: visible;
+}
+
 .chat-response {
   white-space: pre-wrap;
   line-height: 1.6;
   margin: 0;
+  max-height: none;
 }
 
 .chat-loading {

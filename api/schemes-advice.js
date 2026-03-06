@@ -11,7 +11,17 @@ function buildPrompt(answers) {
   const lines = Object.entries(answers)
     .map(([k, v]) => `${k}: ${v}`)
     .join('\n')
-  return `Based on these farmer details suggest Indian government schemes that may help them. Explain each scheme in very simple language.
+  return `Based on these farmer details suggest Indian government schemes that may help them.
+
+Rules for your response:
+- Use plain text only. Do not use any markdown (no **, no *, no #).
+- Give each scheme as a numbered list item: write the scheme name on one line, then on the next line write a short description of its benefits in very simple language.
+- Example format:
+1. PM-KISAN
+Gives you money every year in your bank account to help with farming costs.
+
+2. [Scheme name]
+[One or two lines about benefits in simple language.]
 
 Farmer details:
 ${lines}`
@@ -56,7 +66,7 @@ export default async function handler(req, res) {
           contents: [{ parts: [{ text: prompt }] }],
           generationConfig: {
             temperature: 0.4,
-            maxOutputTokens: 1024,
+            maxOutputTokens: 2048,
           },
         }),
       }
