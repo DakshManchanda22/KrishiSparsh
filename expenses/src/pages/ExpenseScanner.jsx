@@ -1,4 +1,4 @@
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
 const API_BASE = import.meta.env.VITE_API_URL || ''
@@ -47,6 +47,12 @@ const T = {
     getSuggestions: 'Get suggestions',
     fetchingSuggestions: 'Getting suggestions…',
     suggestions: 'Suggestions',
+    scanUnavailable: 'Scan service unavailable. If you\'re testing locally, set VITE_API_URL to your deployed site URL (e.g. https://yoursite.vercel.app) and restart the dev server.',
+    pastBills: 'Past bills',
+    noPastBills: 'No past bills yet. Scan a bill to save it here.',
+    deleteBill: 'Delete',
+    close: 'Close',
+    billTotal: 'Total',
   },
   hi: {
     fertilizer: 'उर्वरक',
@@ -81,6 +87,12 @@ const T = {
     getSuggestions: 'सुझाव लें',
     fetchingSuggestions: 'सुझाव लिए जा रहे हैं…',
     suggestions: 'सुझाव',
+    scanUnavailable: 'स्कैन सेवा उपलब्ध नहीं। लोकल टेस्ट के लिए VITE_API_URL सेट करें।',
+    pastBills: 'पिछले बिल',
+    noPastBills: 'अभी कोई बिल नहीं। बिल स्कैन करने पर यहाँ दिखेगा।',
+    deleteBill: 'हटाएं',
+    close: 'बंद करें',
+    billTotal: 'कुल',
   },
 }
 const RECOMMENDED_RANGES = {
@@ -248,6 +260,9 @@ export default function ExpenseScanner() {
   const [loadingSuggestions, setLoadingSuggestions] = useState(false)
   const [openCategory, setOpenCategory] = useState(null)
   const [landAcres, setLandAcres] = useState('')
+  const [pastBills, setPastBills] = useState([])
+  const [expandedBillId, setExpandedBillId] = useState(null)
+  const [deletingId, setDeletingId] = useState(null)
   const [userId] = useState(() => {
     try {
       return localStorage.getItem('expense_scanner_user_id') || ''
@@ -261,6 +276,19 @@ export default function ExpenseScanner() {
     try { localStorage.setItem(LANG_KEY, next) } catch (_) {}
     setLocale(next)
   }
+
+  const loadPastBills = useCallback(async () => {
+    if (!isSupabaseConfigured()) return
+    const uid = userId?.trim() || null
+    let q = supabase.from('bill_scans').select('id, payload, created_at').order('created_at', { ascending: false })
+    if (uid) q = q.eq('user_id', uid)
+    const { data } = await q
+    setPastBills(data || [])
+  }, [userId])
+
+  useEffect(() => {
+    loadPastBills()
+  }, [loadPastBills])
 
   const handleFile = useCallback((e) => {
     const f = e.target.files?.[0]
@@ -331,6 +359,15 @@ export default function ExpenseScanner() {
     }
   }, [geminiResult, landAcres, userId, t.genericError])
 
+  const deleteBill = useCallback(async (id) => {
+    if (!id || !isSupabaseConfigured()) return
+    setDeletingId(id)
+    await supabase.from('bill_scans').delete().eq('id', id)
+    setPastBills((prev) => prev.filter((b) => b.id !== id))
+    setExpandedBillId((current) => (current === id ? null : current))
+    setDeletingId(null)
+  }, [])
+
   const processBill = async () => {
     if (!file) {
       setError(t.selectBill)
@@ -343,17 +380,39 @@ export default function ExpenseScanner() {
     setSuggestions(null)
     try {
       const { imageBase64, mimeType } = await fileToBase64(file)
-      const scanRes = await fetch(`${API_BASE}/api/scan-bill`, {
-        method: 'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ imageBase64, mimeType }),
-      })
-      const scanData = await scanRes.json()
+      let scanRes
+      try {
+        scanRes = await fetch(`${API_BASE}/api/scan-bill`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ imageBase64, mimeType }),
+        })
+      } catch (fetchErr) {
+        setError(t.scanUnavailable)
+        setLoading(false)
+        return
+      }
+      let scanData
+      try {
+        scanData = await scanRes.json()
+      } catch {
+        setError(t.genericError)
+        setLoading(false)
+        return
+      }
       if (scanRes.ok && scanData.categories) {
         setGeminiResult({
           categories: withIds(scanData.categories),
           total: scanData.total,
         })
+        if (isSupabaseConfigured()) {
+          const uid = userId?.trim() || null
+          const { error: insertErr } = await supabase.from('bill_scans').insert({
+            user_id: uid,
+            payload: { categories: scanData.categories, total: scanData.total },
+          })
+          if (!insertErr) loadPastBills()
+        }
         setLoading(false)
         return
       }
@@ -658,6 +717,133 @@ export default function ExpenseScanner() {
             </ul>
           </section>
         )}
+
+        {isSupabaseConfigured() && (
+          <section style={sectionStyle}>
+            <h2 style={{ fontSize: '1rem', marginTop: 0, fontWeight: 'bold', marginBottom: '0.75rem' }}>{t.pastBills}</h2>
+            {pastBills.length === 0 ? (
+              <p style={{ color: '#2d5a27', margin: 0, fontSize: '0.95rem' }}>{t.noPastBills}</p>
+            ) : (
+              <div style={{ display: 'flex', gap: '0.75rem', overflowX: 'auto', paddingBottom: '0.5rem', scrollSnapType: 'x mandatory', WebkitOverflowScrolling: 'touch' }}>
+                {pastBills.map((bill) => {
+                  const payload = bill.payload || {}
+                  const total = payload.total != null ? Number(payload.total) : null
+                  const dateStr = bill.created_at ? new Date(bill.created_at).toLocaleDateString(undefined, { day: 'numeric', month: 'short', year: 'numeric' }) : ''
+                  const catCount = payload.categories ? Object.values(payload.categories).filter(Array.isArray).reduce((s, arr) => s + (arr?.length || 0), 0) : 0
+                  return (
+                    <button
+                      key={bill.id}
+                      type="button"
+                      onClick={() => setExpandedBillId(bill.id)}
+                      style={{
+                        flex: '0 0 auto',
+                        width: '140px',
+                        minHeight: '100px',
+                        scrollSnapAlign: 'start',
+                        padding: '0.75rem',
+                        border: '3px solid #2d5a27',
+                        borderRadius: '8px',
+                        background: '#e8f5e9',
+                        textAlign: 'left',
+                        cursor: 'pointer',
+                        fontWeight: '600',
+                        color: '#1a3d16',
+                        boxShadow: '3px 3px 0 rgba(45, 90, 39, 0.25)',
+                      }}
+                    >
+                      <div style={{ fontSize: '0.8rem', opacity: 0.9, marginBottom: '0.25rem' }}>{dateStr}</div>
+                      {total != null && <div style={{ fontSize: '1.1rem' }}>₹ {total.toLocaleString('en-IN')}</div>}
+                      <div style={{ fontSize: '0.75rem', marginTop: '0.25rem', opacity: 0.85 }}>{catCount} items</div>
+                    </button>
+                  )
+                })}
+              </div>
+            )}
+          </section>
+        )}
+
+        {expandedBillId && (() => {
+          const bill = pastBills.find((b) => b.id === expandedBillId)
+          if (!bill) return null
+          const payload = bill.payload || {}
+          const categories = payload.categories || {}
+          return (
+            <div
+              role="dialog"
+              aria-modal="true"
+              aria-label="Bill details"
+              style={{
+                position: 'fixed',
+                inset: 0,
+                zIndex: 1000,
+                background: 'rgba(0,0,0,0.5)',
+                display: 'flex',
+                alignItems: 'center',
+                justifyContent: 'center',
+                padding: '1rem',
+              }}
+              onClick={() => setExpandedBillId(null)}
+            >
+              <div
+                style={{
+                  background: '#fff',
+                  borderRadius: '12px',
+                  border: '4px solid #2d5a27',
+                  maxWidth: '90vw',
+                  maxHeight: '85vh',
+                  overflow: 'auto',
+                  padding: '1.25rem',
+                  boxShadow: '6px 6px 0 rgba(45, 90, 39, 0.3)',
+                }}
+                onClick={(e) => e.stopPropagation()}
+              >
+                <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem', flexWrap: 'wrap', gap: '0.5rem' }}>
+                  <strong style={{ fontSize: '1rem' }}>
+                    {bill.created_at ? new Date(bill.created_at).toLocaleString(undefined, { dateStyle: 'medium', timeStyle: 'short' }) : ''}
+                  </strong>
+                  <div style={{ display: 'flex', gap: '0.5rem' }}>
+                    <button
+                      type="button"
+                      onClick={() => deleteBill(bill.id)}
+                      disabled={deletingId === bill.id}
+                      style={{ ...buttonBase, background: '#c53030', color: '#fff', padding: '8px 14px', fontSize: '0.9rem' }}
+                    >
+                      {deletingId === bill.id ? '…' : t.deleteBill}
+                    </button>
+                    <button type="button" onClick={() => setExpandedBillId(null)} style={{ ...buttonBase, background: '#2d5a27', color: '#fff', padding: '8px 14px', fontSize: '0.9rem' }}>
+                      {t.close}
+                    </button>
+                  </div>
+                </div>
+                {payload.total != null && (
+                  <p style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 1rem', color: '#1a3d16' }}>
+                    {t.billTotal}: ₹ {Number(payload.total).toLocaleString('en-IN')}
+                  </p>
+                )}
+                {CATEGORIES.map((cat) => {
+                  const items = categories[cat]
+                  if (!Array.isArray(items) || items.length === 0) return null
+                  const label = t[cat] || CATEGORY_LABELS[cat]
+                  return (
+                    <div key={cat} style={{ marginBottom: '1rem' }}>
+                      <div style={{ fontWeight: 'bold', marginBottom: '0.35rem', color: '#2d5a27' }}>{label}</div>
+                      <ul style={{ margin: 0, paddingLeft: '1.25rem', lineHeight: 1.5 }}>
+                        {items.map((item, i) => (
+                          <li key={i}>
+                            {item.name ?? '—'}
+                            {item.quantity != null && item.quantity !== '' && ` × ${item.quantity}`}
+                            {item.unit && ` ${item.unit}`}
+                            {item.amount != null && item.amount !== '' && ` → ₹ ${Number(item.amount).toLocaleString('en-IN')}`}
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  )
+                })}
+              </div>
+            </div>
+          )
+        })()}
       </main>
     </>
   )

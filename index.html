@@ -42,7 +42,7 @@
     }
   </script>
 </head>
-<body class="bg-surface text-primary font-sans antialiased min-h-screen overflow-x-hidden">
+<body class="body-bg text-primary font-sans antialiased min-h-screen overflow-x-hidden">
   <script>
     if (typeof history !== 'undefined' && history.scrollRestoration) history.scrollRestoration = 'manual';
     window.scrollTo(0, 0);
@@ -140,17 +140,17 @@
             </div>
           </div>
           <div class="flex flex-wrap items-center gap-4 px-8 pb-8 pt-6 border-t border-black/20 mt-6">
-            <div class="inline-flex items-center gap-2 rounded-full bg-green-light/90 px-4 py-2.5 border border-green-light">
-                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-white/80 text-green-deep shrink-0">
+            <div class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 border shrink-0 features-pill-light">
+                <span class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 features-pill-light-icon">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"/></svg>
                 </span>
-                <span class="text-sm font-medium text-primary">C8E1A0 <span class="text-primary/90">AI Advisory</span></span>
+                <span class="text-sm font-medium features-pill-light-text">AI Advisory</span>
               </div>
-              <div class="inline-flex items-center gap-2 rounded-full bg-green-deep/90 px-4 py-2.5 border border-green-deep/80 text-white">
-                <span class="flex items-center justify-center w-8 h-8 rounded-full bg-white/20 text-white shrink-0">
+              <div class="inline-flex items-center gap-2 rounded-full px-4 py-2.5 border shrink-0 features-pill-green">
+                <span class="flex items-center justify-center w-8 h-8 rounded-full shrink-0 features-pill-green-icon">
                   <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 3v4M3 5h4M6 17v4m-2-2h4m5-16l2.286 6.857L21 12l-5.714 2.143L13 21l-2.286-6.857L5 12l5.714-2.143L13 3z"/></svg>
                 </span>
-                <span class="text-sm font-medium">6F874B</span>
+                <span class="text-sm font-medium">Smart farming</span>
               </div>
           </div>
         </div>
@@ -259,23 +259,15 @@
   <script>
     (function () {
       var cards = document.querySelectorAll('.tall-card-lazy[data-bg]');
-      if (cards.length && 'IntersectionObserver' in window) {
-        var io = new IntersectionObserver(function (entries) {
-          entries.forEach(function (entry) {
-            if (!entry.isIntersecting) return;
-            var el = entry.target;
-            var bg = el.getAttribute('data-bg');
-            if (bg) { el.style.backgroundImage = bg; el.removeAttribute('data-bg'); el.classList.remove('tall-card-lazy'); }
-            io.unobserve(el);
-          });
-        }, { rootMargin: '100px', threshold: 0.01 });
-        cards.forEach(function (el) { io.observe(el); });
-      } else {
-        cards.forEach(function (el) {
-          var bg = el.getAttribute('data-bg');
-          if (bg) { el.style.backgroundImage = bg; el.removeAttribute('data-bg'); el.classList.remove('tall-card-lazy'); }
-        });
+      function applyBg(el) {
+        var bg = el.getAttribute('data-bg');
+        if (bg) {
+          el.style.backgroundImage = bg;
+          el.removeAttribute('data-bg');
+          el.classList.remove('tall-card-lazy');
+        }
       }
+      cards.forEach(applyBg);
     })();
   </script>
   <script>

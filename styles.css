@@ -4,6 +4,38 @@ html {
   -webkit-text-size-adjust: 100%;
 }
 
+/* Avoid gray flash on refresh: paint body white before Tailwind */
+body.body-bg,
+body.bg-surface {
+  background-color: #fff;
+}
+
+/* Features card pills: visible without Tailwind (icon + text) */
+.features-pill-light {
+  background: rgba(200, 225, 160, 0.9);
+  border-color: #C8E1A0;
+  color: #1a3d16;
+}
+.features-pill-light-icon {
+  background: rgba(255, 255, 255, 0.8);
+  color: #6F874B;
+}
+.features-pill-light-text {
+  color: #6C513C;
+}
+.features-pill-green {
+  background: rgba(111, 135, 75, 0.9);
+  border-color: rgba(111, 135, 75, 0.8);
+  color: #fff;
+}
+.features-pill-green-icon {
+  background: rgba(255, 255, 255, 0.2);
+  color: #fff;
+}
+.features-pill-green .text-sm {
+  color: #fff;
+}
+
 /* Tailwind utility override */
 .rounded-soft {
   border-radius: 24px;
@@ -129,9 +161,9 @@ a.tall-card:hover {
   height: 48px;
   opacity: 0.8;
 }
-/* Placeholder until lazy-loaded background is in view */
+/* Placeholder until background image is set */
 .tall-card.tall-card-lazy {
-  background-color: rgba(0, 0, 0, 0.15);
+  background-color: rgba(0, 0, 0, 0.2);
 }
 
 #main-nav.scrolled {
