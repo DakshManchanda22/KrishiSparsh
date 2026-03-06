@@ -1,9 +1,11 @@
 /**
  * Vercel Serverless Function: Scheme suggestions via Gemini.
  * Set GEMINI_API_KEY in Vercel project Environment Variables.
+ * Optional: GEMINI_MODEL (default gemini-1.5-flash; try gemini-2.0-flash or gemini-2.5-flash if available).
  */
 
-const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-pro:generateContent'
+const GEMINI_MODEL = process.env.GEMINI_MODEL || 'gemini-1.5-flash'
+const GEMINI_URL = `https://generativelanguage.googleapis.com/v1beta/models/${GEMINI_MODEL}:generateContent`
 
 function buildPrompt(answers) {
   const lines = Object.entries(answers)

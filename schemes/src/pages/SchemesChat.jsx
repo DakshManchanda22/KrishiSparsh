@@ -61,6 +61,31 @@ export default function SchemesChat() {
     }
   }
 
+  const goBack = () => {
+    if (step <= 0) return
+    const prevStep = step - 1
+    setStep(prevStep)
+    const prevQuestion = QUESTIONS[prevStep]
+    if (prevQuestion?.type === 'text' && answers[prevQuestion.id] != null) {
+      setTextInput(answers[prevQuestion.id])
+    } else {
+      setTextInput('')
+    }
+  }
+
+  const goBackFromResult = () => {
+    setResult(null)
+    setError(null)
+    const lastStep = QUESTIONS.length - 1
+    setStep(lastStep)
+    const lastQ = QUESTIONS[lastStep]
+    if (lastQ?.type === 'text' && answers[lastQ.id] != null) {
+      setTextInput(answers[lastQ.id])
+    } else {
+      setTextInput('')
+    }
+  }
+
   const fetchSuggestions = async (finalAnswers) => {
     setLoading(true)
     setError(null)
@@ -139,28 +164,51 @@ export default function SchemesChat() {
                   onKeyDown={(e) => e.key === 'Enter' && submitText()}
                   autoFocus
                 />
-                <button
-                  type="button"
-                  className="chat-option-btn"
-                  onClick={submitText}
-                  disabled={!textInput.trim()}
-                >
-                  Next
-                </button>
-              </>
-            ) : (
-              <div className="chat-options">
-                {current.options.map((opt) => (
+                <div className="chat-buttons-row">
+                  {step > 0 && (
+                    <button
+                      type="button"
+                      className="chat-option-btn chat-back-btn"
+                      onClick={goBack}
+                    >
+                      ← Back
+                    </button>
+                  )}
                   <button
-                    key={opt}
                     type="button"
                     className="chat-option-btn"
-                    onClick={() => submitChoice(opt)}
+                    onClick={submitText}
+                    disabled={!textInput.trim()}
                   >
-                    {opt}
+                    Next
                   </button>
-                ))}
-              </div>
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="chat-options">
+                  {current.options.map((opt) => (
+                    <button
+                      key={opt}
+                      type="button"
+                      className="chat-option-btn"
+                      onClick={() => submitChoice(opt)}
+                    >
+                      {opt}
+                    </button>
+                  ))}
+                </div>
+                {step > 0 && (
+                  <button
+                    type="button"
+                    className="chat-option-btn chat-back-btn"
+                    onClick={goBack}
+                    style={{ marginTop: '1rem' }}
+                  >
+                    ← Back
+                  </button>
+                )}
+              </>
             )}
           </section>
         )}
@@ -169,6 +217,15 @@ export default function SchemesChat() {
           <section className="chat-section">
             <p className="chat-question">Schemes that may help you:</p>
             <p className="chat-response">{result}</p>
+            <div className="chat-buttons-row" style={{ marginTop: '1rem' }}>
+              <button
+                type="button"
+                className="chat-option-btn chat-back-btn"
+                onClick={goBackFromResult}
+              >
+                ← Change answers
+              </button>
+            </div>
           </section>
         )}
       </main>
