@@ -79,10 +79,10 @@ export default function DiseaseDetection() {
       </header>
 
       <main className="page-container">
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem', color: 'var(--primary)' }}>
+        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem', color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
           Plant Disease Detection
         </h1>
-        <p style={{ marginBottom: '1.5rem', color: 'var(--primary)', opacity: 0.85 }}>
+        <p style={{ marginBottom: '1.5rem', color: 'rgba(255,255,255,0.95)' }}>
           Upload a leaf or plant image to detect possible disease using AI.
         </p>
 

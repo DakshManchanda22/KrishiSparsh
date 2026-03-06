@@ -11,7 +11,7 @@ body {
   margin: 0;
   min-height: 100vh;
   font-family: 'DM Sans', system-ui, sans-serif;
-  background: var(--surface);
+  background: linear-gradient(180deg, #8fa86a 0%, #6F874B 12%, #5a6d3a 100%);
   color: var(--primary);
 }
 
@@ -32,9 +32,9 @@ button, [role="button"], a { min-height: 44px; min-width: 44px; }
   position: fixed;
   top: 0; left: 0; right: 0;
   z-index: 9999;
-  background: rgba(255,255,255,0.12);
-  backdrop-filter: blur(12px);
-  border-bottom: 1px solid rgba(255,255,255,0.2);
+  background: var(--green-deep);
+  border-bottom: 2px solid rgba(0,0,0,0.15);
+  box-shadow: 0 2px 12px rgba(0,0,0,0.15);
 }
 .site-nav-inner {
   max-width: 80rem;

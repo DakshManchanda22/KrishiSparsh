@@ -14,11 +14,20 @@ from pathlib import Path
 
 import torch
 from fastapi import FastAPI, File, UploadFile, HTTPException
+from fastapi.middleware.cors import CORSMiddleware
 from PIL import Image
 from torchvision import transforms
 
 from model import CNN_NeuralNet
 from classes import CLASSES
+
+CORS_ORIGINS = [
+    "https://krishi-sparsh.vercel.app",
+    "https://www.krishi-sparsh.vercel.app",
+    "http://localhost:5173",
+    "http://localhost:3000",
+    "http://127.0.0.1:5173",
+]
 
 # Same as training: 256x256 then ToTensor
 INFERENCE_TRANSFORM = transforms.Compose([
@@ -30,6 +39,14 @@ MODEL_PATH = Path(__file__).resolve().parent / "FinalModel.pth"
 DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 app = FastAPI(title="Plant Disease Prediction API")
+
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=CORS_ORIGINS,
+    allow_credentials=True,
+    allow_methods=["GET", "POST", "OPTIONS"],
+    allow_headers=["*"],
+)
 
 _model = None
 
