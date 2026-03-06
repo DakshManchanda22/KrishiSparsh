@@ -6,7 +6,7 @@
   <title>कृषिSparsh – Smart Agriculture for Farmers</title>
   <link rel="preconnect" href="https://fonts.googleapis.com" />
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-  <link rel="preload" href="tractoronfield.jpg" as="image" />
+  <link rel="preload" href="/tractoronfield.jpg" as="image" />
   <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" media="print" onload="this.media='all'" />
   <noscript><link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Lora:ital,wght@0,400;0,600;0,700;1,400&display=swap" rel="stylesheet" /></noscript>
   <link rel="stylesheet" href="styles.css" />
@@ -55,12 +55,7 @@
     <header id="main-nav" class="fixed top-0 left-0 w-full z-[100] backdrop-blur-md bg-white/10 border-b border-white/20 transition-all duration-300">
       <nav class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div class="flex items-center justify-between h-16 lg:h-20">
-          <a href="#" class="flex items-center gap-2 shrink-0">
-            <span class="flex items-center justify-center w-10 h-10 rounded-2xl bg-green-light/90 shadow-clay text-green-deep" aria-hidden="true">
-              <svg class="w-5 h-5" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2zm0 11c-1.4 0-2.5-1.1-2.5-2.5S10.6 8 12 8s2.5 1.1 2.5 2.5S13.4 13 12 13z"/></svg>
-            </span>
-            <span class="nav-brand text-lg font-semibold text-white hidden sm:inline">कृषिSparsh</span>
-          </a>
+          <a href="#" class="flex items-center shrink-0 nav-brand text-lg font-semibold text-white">कृषिSparsh</a>
 
           <div id="nav-links-desktop" class="hidden md:flex items-center justify-center gap-1 flex-1">
             <a href="#disease" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.disease">Disease Detection</a>
@@ -88,12 +83,12 @@
       </nav>
     </header>
 
-    <!-- Hero image: high priority, decode async; loads first for LCP -->
+    <!-- Hero image: root-relative so it loads on refresh; inline size so it shows before Tailwind -->
     <div class="relative w-full">
       <img
-        src="tractoronfield.jpg"
+        src="/tractoronfield.jpg"
         alt="Tractor on field"
-        class="w-full h-auto object-cover block"
+        style="width:100%;height:auto;display:block;object-fit:cover"
         fetchpriority="high"
         decoding="async"
         width="1920"
@@ -171,86 +166,86 @@
       <div class="cards-carousel-wrap">
         <div class="cards-carousel-track">
           <!-- 7 crop cards, duplicated for seamless loop; 3 visible at a time -->
-          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('soyabean.avif');">
+          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/soyabean.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.soybean.title">How to get the best Soybean produce</h3>
             <p class="tall-card-desc" data-i18n="card.soybean.desc">Soil, seed rate, fertiliser and drip irrigation tips for maximum soybean returns.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('wheat.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/wheat.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.wheat.title">7 tips to get the best Wheat produce</h3>
             <p class="tall-card-desc" data-i18n="card.wheat.desc">Seeding, irrigation schedule and fertilisation for a high wheat yield.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('tomato.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/tomato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.tomato.title">7 tips to Get the Best Tomato Yield</h3>
             <p class="tall-card-desc" data-i18n="card.tomato.desc">Sunlight, spacing, watering and mulching for plump, healthy tomatoes.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('potato.jpg');">
+          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/potato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.potato.title">Potato – diseases and symptoms</h3>
             <p class="tall-card-desc" data-i18n="card.potato.desc">Late blight, bacterial wilt and blackheart: control and management.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.sugarcane.title">Tips on increasing sugarcane yield</h3>
             <p class="tall-card-desc" data-i18n="card.sugarcane.desc">Drip irrigation, soil, nutrients and intercropping for better sugarcane.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('onion.jpg');">
+          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/onion.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.onion.title">Important Tips On Onion Farming</h3>
             <p class="tall-card-desc" data-i18n="card.onion.desc">Water management, drip irrigation and export-quality onion practices.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.cotton.title">Cotton farming – the success story</h3>
             <p class="tall-card-desc" data-i18n="card.cotton.desc">Drip irrigation and modern techniques for higher cotton yield.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
           <!-- Duplicate set for seamless loop -->
-          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('soyabean.avif');">
+          <a href="https://mahadhan.co.in/get-best-soybean-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/soyabean.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.soybean.title">How to get the best Soybean produce</h3>
             <p class="tall-card-desc" data-i18n="card.soybean.desc">Soil, seed rate, fertiliser and drip irrigation tips for maximum soybean returns.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('wheat.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-wheat-produce/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/wheat.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.wheat.title">7 tips to get the best Wheat produce</h3>
             <p class="tall-card-desc" data-i18n="card.wheat.desc">Seeding, irrigation schedule and fertilisation for a high wheat yield.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('tomato.jpg');">
+          <a href="https://mahadhan.co.in/7-tips-get-best-tomato-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/tomato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.tomato.title">7 tips to Get the Best Tomato Yield</h3>
             <p class="tall-card-desc" data-i18n="card.tomato.desc">Sunlight, spacing, watering and mulching for plump, healthy tomatoes.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('potato.jpg');">
+          <a href="https://mahadhan.co.in/potato-diseases-symptoms/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/potato.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.potato.title">Potato – diseases and symptoms</h3>
             <p class="tall-card-desc" data-i18n="card.potato.desc">Late blight, bacterial wilt and blackheart: control and management.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/tips-increasing-sugarcane-yield/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.sugarcane.title">Tips on increasing sugarcane yield</h3>
             <p class="tall-card-desc" data-i18n="card.sugarcane.desc">Drip irrigation, soil, nutrients and intercropping for better sugarcane.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('onion.jpg');">
+          <a href="https://mahadhan.co.in/important-tips-onion-farming/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/onion.jpg');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.onion.title">Important Tips On Onion Farming</h3>
             <p class="tall-card-desc" data-i18n="card.onion.desc">Water management, drip irrigation and export-quality onion practices.</p>
             <div class="tall-card-img"><svg fill="currentColor" viewBox="0 0 24 24"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2z"/></svg></div>
           </a>
-          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('sugar%20cane.avif');">
+          <a href="https://mahadhan.co.in/cotton-farming-success-story/" target="_blank" rel="noopener noreferrer" class="tall-card tall-card-dark tall-card-lazy" data-bg="url('/sugar%20cane.avif');">
             <span class="tall-card-label" data-i18n="card.featured">Featured</span>
             <h3 class="tall-card-title" data-i18n="card.cotton.title">Cotton farming – the success story</h3>
             <p class="tall-card-desc" data-i18n="card.cotton.desc">Drip irrigation and modern techniques for higher cotton yield.</p>

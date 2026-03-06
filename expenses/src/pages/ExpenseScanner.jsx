@@ -1,6 +1,8 @@
 import { useState, useCallback } from 'react'
 import { supabase, isSupabaseConfigured } from '../lib/supabase'
 
+const API_BASE = import.meta.env.VITE_API_URL || ''
+
 const CATEGORIES = ['fertilizer', 'seed', 'labour', 'pesticide', 'transport', 'other']
 const CATEGORY_LABELS = {
   fertilizer: 'Fertilizer',
@@ -9,6 +11,77 @@ const CATEGORY_LABELS = {
   pesticide: 'Pesticide',
   transport: 'Transport',
   other: 'Other',
+}
+const LANG_KEY = 'krishisparsh_lang'
+const T = {
+  en: {
+    fertilizer: 'Fertilizer',
+    seed: 'Seeds',
+    labour: 'Labour',
+    pesticide: 'Pesticide',
+    transport: 'Transport',
+    other: 'Other',
+    navDisease: 'Disease Detection',
+    navWater: 'Water Advisor',
+    navExpenses: 'Expenses',
+    navSchemes: 'Schemes',
+    langBtn: 'हिंदी',
+    title: 'Expense Scanner',
+    subtitle: 'Upload a bill photo. We will read the total and show your monthly summary.',
+    billImage: 'Bill image',
+    landSize: 'Land size (acres) – optional',
+    landSizeHint: 'For cost per acre',
+    scanBtn: 'Scan and add expense',
+    scanning: 'Reading bill…',
+    thisMonth: 'This month',
+    total: 'Total',
+    costPerAcre: 'Cost per acre',
+    byCategory: 'By category',
+    advice: 'Advice',
+    selectBill: 'Please select a bill image.',
+    noTotal: 'Could not find total amount on the bill. Please enter it manually or use a clearer photo.',
+    supabaseError: 'Supabase is not set up. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.',
+    saveError: 'Failed to save expense.',
+    loadError: 'Failed to load expenses.',
+    genericError: 'Something went wrong. Try again.',
+    getSuggestions: 'Get suggestions',
+    fetchingSuggestions: 'Getting suggestions…',
+    suggestions: 'Suggestions',
+  },
+  hi: {
+    fertilizer: 'उर्वरक',
+    seed: 'बीज',
+    labour: 'मजदूरी',
+    pesticide: 'कीटनाशक',
+    transport: 'परिवहन',
+    other: 'अन्य',
+    navDisease: 'रोग पहचान',
+    navWater: 'जल सलाहकार',
+    navExpenses: 'खर्च',
+    navSchemes: 'योजनाएं',
+    langBtn: 'English',
+    title: 'खर्च स्कैनर',
+    subtitle: 'बिल की फोटो अपलोड करें। हम कुल राशि पढ़कर महीने का सार दिखाएंगे।',
+    billImage: 'बिल की तस्वीर',
+    landSize: 'जमीन का आकार (एकड़) – वैकल्पिक',
+    landSizeHint: 'प्रति एकड़ लागत के लिए',
+    scanBtn: 'स्कैन करें और खर्च जोड़ें',
+    scanning: 'बिल पढ़ रहे हैं…',
+    thisMonth: 'इस महीने',
+    total: 'कुल',
+    costPerAcre: 'प्रति एकड़ लागत',
+    byCategory: 'श्रेणी के अनुसार',
+    advice: 'सलाह',
+    selectBill: 'कृपया बिल की तस्वीर चुनें।',
+    noTotal: 'बिल पर कुल राशि नहीं मिली। कृपया खुद डालें या साफ फोटो लें।',
+    supabaseError: 'Supabase सेट अप नहीं है।',
+    saveError: 'खर्च सहेजने में विफल।',
+    loadError: 'खर्च लोड करने में विफल।',
+    genericError: 'कुछ गड़बड़ हुई। दोबारा कोशिश करें।',
+    getSuggestions: 'सुझाव लें',
+    fetchingSuggestions: 'सुझाव लिए जा रहे हैं…',
+    suggestions: 'सुझाव',
+  },
 }
 const RECOMMENDED_RANGES = {
   fertilizer: { min: 25, max: 35 },
@@ -125,12 +198,55 @@ function generateAdvice(data) {
   return advice
 }
 
+function getStoredLang() {
+  try {
+    return localStorage.getItem(LANG_KEY) || 'en'
+  } catch {
+    return 'en'
+  }
+}
+
+function withIds(categories) {
+  const out = {}
+  let id = 0
+  for (const cat of CATEGORIES) {
+    const list = Array.isArray(categories?.[cat]) ? categories[cat] : []
+    out[cat] = list.map((item) => ({
+      id: ++id,
+      name: item.name ?? '',
+      quantity: item.quantity ?? '',
+      unit: item.unit ?? '',
+      amount: item.amount ?? '',
+    }))
+  }
+  return out
+}
+
+function fileToBase64(file) {
+  return new Promise((resolve, reject) => {
+    const reader = new FileReader()
+    reader.onload = () => {
+      const dataUrl = reader.result
+      const base64 = dataUrl.indexOf('base64,') >= 0 ? dataUrl.split('base64,')[1] : dataUrl
+      const mime = file.type || 'image/jpeg'
+      resolve({ imageBase64: base64, mimeType: mime })
+    }
+    reader.onerror = reject
+    reader.readAsDataURL(file)
+  })
+}
+
 export default function ExpenseScanner() {
+  const [locale, setLocale] = useState(getStoredLang)
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
   const [result, setResult] = useState(null)
+  const [geminiResult, setGeminiResult] = useState(null)
+  const [suggestions, setSuggestions] = useState(null)
+  const [loadingSuggestions, setLoadingSuggestions] = useState(false)
+  const [openCategory, setOpenCategory] = useState(null)
   const [landAcres, setLandAcres] = useState('')
   const [userId] = useState(() => {
     try {
@@ -139,28 +255,116 @@ export default function ExpenseScanner() {
       return ''
     }
   })
+  const t = T[locale] || T.en
+  const toggleLang = () => {
+    const next = locale === 'en' ? 'hi' : 'en'
+    try { localStorage.setItem(LANG_KEY, next) } catch (_) {}
+    setLocale(next)
+  }
 
   const handleFile = useCallback((e) => {
     const f = e.target.files?.[0]
     setFile(f)
     setError(null)
     setResult(null)
+    setGeminiResult(null)
+    setSuggestions(null)
     if (preview) URL.revokeObjectURL(preview)
     setPreview(f ? URL.createObjectURL(f) : null)
   }, [preview])
 
+  const updateGeminiItem = useCallback((cat, index, field, value) => {
+    setGeminiResult((prev) => {
+      if (!prev?.categories) return prev
+      const next = { ...prev, categories: { ...prev.categories } }
+      const list = [...(next.categories[cat] || [])]
+      if (list[index]) list[index] = { ...list[index], [field]: value }
+      next.categories[cat] = list
+      return next
+    })
+  }, [])
+
+  const fetchSuggestions = useCallback(async () => {
+    if (!geminiResult?.categories) return
+    setLoadingSuggestions(true)
+    setSuggestions(null)
+    try {
+      let totalThisMonth = null
+      let lastMonthTotal = null
+      let historicalSummary = ''
+      if (isSupabaseConfigured()) {
+        const now = new Date()
+        const startThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
+        const endThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
+        const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
+        const endLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
+        const uid = userId?.trim() || null
+        let q = supabase.from('expenses').select('amount').gte('created_at', startThisMonth.toISOString()).lte('created_at', endThisMonth.toISOString())
+        if (uid) q = q.eq('user_id', uid)
+        const { data: thisRows } = await q
+        totalThisMonth = (thisRows || []).reduce((s, r) => s + Number(r.amount || 0), 0)
+        q = supabase.from('expenses').select('amount').gte('created_at', startLastMonth.toISOString()).lte('created_at', endLastMonth.toISOString())
+        if (uid) q = q.eq('user_id', uid)
+        const { data: lastRows } = await q
+        lastMonthTotal = (lastRows || []).reduce((s, r) => s + Number(r.amount || 0), 0)
+        historicalSummary = `This month total: ₹${totalThisMonth}. Last month total: ₹${lastMonthTotal}.`
+      }
+      const body = {
+        currentItems: { categories: geminiResult.categories, total: geminiResult.total },
+        historicalSummary,
+        totalThisMonth,
+        lastMonthTotal,
+        landAcres: landAcres.trim() || null,
+      }
+      const res = await fetch(`${API_BASE}/api/expense-suggestions`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      })
+      const data = await res.json()
+      if (!res.ok) throw new Error(data.error || 'Failed to get suggestions')
+      setSuggestions(Array.isArray(data.suggestions) ? data.suggestions : [])
+    } catch (err) {
+      setError(err?.message || t.genericError)
+    } finally {
+      setLoadingSuggestions(false)
+    }
+  }, [geminiResult, landAcres, userId, t.genericError])
+
   const processBill = async () => {
     if (!file) {
-      setError('Please select a bill image.')
-      return
-    }
-    if (!isSupabaseConfigured()) {
-      setError('Supabase is not set up. Add VITE_SUPABASE_URL and VITE_SUPABASE_ANON_KEY.')
+      setError(t.selectBill)
       return
     }
     setLoading(true)
     setError(null)
     setResult(null)
+    setGeminiResult(null)
+    setSuggestions(null)
+    try {
+      const { imageBase64, mimeType } = await fileToBase64(file)
+      const scanRes = await fetch(`${API_BASE}/api/scan-bill`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ imageBase64, mimeType }),
+      })
+      const scanData = await scanRes.json()
+      if (scanRes.ok && scanData.categories) {
+        setGeminiResult({
+          categories: withIds(scanData.categories),
+          total: scanData.total,
+        })
+        setLoading(false)
+        return
+      }
+    } catch (_) {
+      /* fall back to Tesseract */
+    }
+    if (!isSupabaseConfigured()) {
+      setError(t.supabaseError)
+      setLoading(false)
+      return
+    }
     let currentBillAmount = null
     try {
       const Tesseract = await import('tesseract.js')
@@ -168,7 +372,7 @@ export default function ExpenseScanner() {
       const rawText = data?.text || ''
       currentBillAmount = extractAmount(rawText)
       if (currentBillAmount == null || currentBillAmount <= 0) {
-        setError('Could not find total amount on the bill. Please enter it manually or use a clearer photo.')
+        setError(t.noTotal)
         setLoading(false)
         return
       }
@@ -181,7 +385,7 @@ export default function ExpenseScanner() {
         raw_text: rawText.slice(0, 5000),
       })
       if (insertErr) {
-        setError(insertErr.message || 'Failed to save expense.')
+        setError(insertErr.message || t.saveError)
         setLoading(false)
         return
       }
@@ -200,7 +404,7 @@ export default function ExpenseScanner() {
       if (uid) query = query.eq('user_id', uid)
       const { data: thisMonthRows, error: e1 } = await query.order('created_at', { ascending: false })
       if (e1) {
-        setError(e1.message || 'Failed to load expenses.')
+        setError(e1.message || t.loadError)
         setLoading(false)
         return
       }
@@ -253,7 +457,7 @@ export default function ExpenseScanner() {
         advice,
       })
     } catch (err) {
-      setError(err?.message || 'Something went wrong. Try again.')
+      setError(err?.message || t.genericError)
     } finally {
       setLoading(false)
     }
@@ -270,13 +474,13 @@ export default function ExpenseScanner() {
             <span className="site-nav-logo-text">कृषिSparsh</span>
           </a>
           <nav className="site-nav-links" aria-label="Main">
-            <a href="/#disease">Disease Detection</a>
-            <a href="/water-advisor/">Water Advisor</a>
-            <a href="/expenses/" className="active">Expenses</a>
-            <a href="/#schemes">Schemes</a>
+            <a href="/#disease">{t.navDisease}</a>
+            <a href="/water-advisor/">{t.navWater}</a>
+            <a href="/expenses/" className="active">{t.navExpenses}</a>
+            <a href="/#schemes">{t.navSchemes}</a>
           </nav>
           <div className="site-nav-right">
-            <button type="button" className="site-nav-join" aria-label="Language">हिंदी</button>
+            <button type="button" className="site-nav-join" aria-label="Language" onClick={toggleLang}>{t.langBtn}</button>
           </div>
         </div>
       </header>
@@ -284,15 +488,15 @@ export default function ExpenseScanner() {
       <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '80px' }}>
         <section style={{ ...sectionStyle, textAlign: 'center', padding: '2rem 1rem' }}>
           <h1 style={{ fontFamily: 'system-ui, sans-serif', fontSize: 'clamp(1.25rem, 4vw, 1.75rem)', color: '#1a3d16', margin: '0 0 0.5rem' }}>
-            Expense Scanner
+            {t.title}
           </h1>
           <p style={{ margin: 0, fontSize: '1rem', color: '#2d5a27' }}>
-            Upload a bill photo. We will read the total and show your monthly summary.
+            {t.subtitle}
           </p>
         </section>
 
         <section style={sectionStyle}>
-          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>Bill image</label>
+          <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.billImage}</label>
           <input
             type="file"
             accept="image/*"
@@ -306,7 +510,7 @@ export default function ExpenseScanner() {
             </div>
           )}
           <div style={{ marginBottom: '1rem' }}>
-            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>Land size (acres) – optional</label>
+            <label style={{ display: 'block', fontWeight: 'bold', marginBottom: '0.25rem' }}>{t.landSize}</label>
             <input
               type="number"
               min="0"
@@ -316,7 +520,7 @@ export default function ExpenseScanner() {
               onChange={(e) => setLandAcres(e.target.value)}
               style={{ padding: '10px 12px', border: '4px solid #2d5a27', borderRadius: '8px', maxWidth: '140px', fontSize: '1rem' }}
             />
-            <span style={{ marginLeft: '0.5rem', fontSize: '0.9rem', color: '#2d5a27' }}>For cost per acre</span>
+            <span style={{ marginLeft: '0.5rem', fontSize: '0.9rem', color: '#2d5a27' }}>{t.landSizeHint}</span>
           </div>
           <button
             type="button"
@@ -324,37 +528,129 @@ export default function ExpenseScanner() {
             disabled={loading}
             style={{ ...buttonBase, background: '#99E194', color: '#1a3d16', width: '100%', maxWidth: '320px' }}
           >
-            {loading ? 'Reading bill…' : 'Scan and add expense'}
+            {loading ? t.scanning : t.scanBtn}
           </button>
           {error && <p style={{ color: '#b45309', marginTop: '0.75rem', fontWeight: '500' }} role="alert">{error}</p>}
         </section>
 
+        {geminiResult && (
+          <section style={sectionStyle}>
+            <h2 style={{ fontSize: '1rem', marginTop: 0, fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.byCategory}</h2>
+            {geminiResult.total != null && (
+              <p style={{ fontSize: '1.25rem', fontWeight: 'bold', margin: '0 0 1rem', color: '#1a3d16' }}>
+                {t.total}: ₹ {Number(geminiResult.total).toLocaleString('en-IN')}
+              </p>
+            )}
+            {CATEGORIES.map((cat) => {
+              const items = geminiResult.categories?.[cat] || []
+              if (items.length === 0) return null
+              const label = t[cat] || CATEGORY_LABELS[cat]
+              const isOpen = openCategory === cat
+              return (
+                <div key={cat} style={{ marginBottom: '0.75rem', border: '2px solid #2d5a27', borderRadius: '8px', overflow: 'hidden' }}>
+                  <button
+                    type="button"
+                    onClick={() => setOpenCategory(isOpen ? null : cat)}
+                    style={{
+                      width: '100%',
+                      padding: '0.6rem 0.75rem',
+                      textAlign: 'left',
+                      background: '#e8f5e9',
+                      border: 'none',
+                      fontWeight: 'bold',
+                      color: '#1a3d16',
+                      cursor: 'pointer',
+                      display: 'flex',
+                      justifyContent: 'space-between',
+                      alignItems: 'center',
+                    }}
+                  >
+                    <span>{label}</span>
+                    <span style={{ fontSize: '1.25rem' }}>{isOpen ? '−' : '+'}</span>
+                  </button>
+                  {isOpen && (
+                    <div style={{ padding: '0.75rem', background: 'rgba(255,255,255,0.7)' }}>
+                      {items.map((item, idx) => (
+                        <div key={item.id} style={{ display: 'grid', gridTemplateColumns: '1fr auto auto auto', gap: '0.5rem', alignItems: 'center', marginBottom: '0.5rem' }}>
+                          <input
+                            value={item.name}
+                            onChange={(e) => updateGeminiItem(cat, idx, 'name', e.target.value)}
+                            placeholder="Item"
+                            style={{ padding: '6px 8px', border: '2px solid #2d5a27', borderRadius: '6px', fontSize: '0.9rem' }}
+                          />
+                          <input
+                            value={item.quantity}
+                            onChange={(e) => updateGeminiItem(cat, idx, 'quantity', e.target.value)}
+                            placeholder="Qty"
+                            style={{ width: '60px', padding: '6px 8px', border: '2px solid #2d5a27', borderRadius: '6px', fontSize: '0.9rem' }}
+                          />
+                          <input
+                            value={item.unit}
+                            onChange={(e) => updateGeminiItem(cat, idx, 'unit', e.target.value)}
+                            placeholder="Unit"
+                            style={{ width: '56px', padding: '6px 8px', border: '2px solid #2d5a27', borderRadius: '6px', fontSize: '0.9rem' }}
+                          />
+                          <input
+                            value={item.amount}
+                            onChange={(e) => updateGeminiItem(cat, idx, 'amount', e.target.value)}
+                            placeholder="₹"
+                            style={{ width: '72px', padding: '6px 8px', border: '2px solid #2d5a27', borderRadius: '6px', fontSize: '0.9rem' }}
+                          />
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              )
+            })}
+            <button
+              type="button"
+              onClick={fetchSuggestions}
+              disabled={loadingSuggestions}
+              style={{ ...buttonBase, background: '#2d5a27', color: '#fff', marginTop: '1rem', width: '100%', maxWidth: '280px' }}
+            >
+              {loadingSuggestions ? t.fetchingSuggestions : t.getSuggestions}
+            </button>
+            {suggestions && suggestions.length > 0 && (
+              <div style={{ marginTop: '1rem' }}>
+                <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.suggestions}</p>
+                <ul style={{ paddingLeft: '1.25rem', margin: 0, lineHeight: 1.6, color: '#1a3d16' }}>
+                  {suggestions.map((line, i) => (
+                    <li key={i}>{line}</li>
+                  ))}
+                </ul>
+              </div>
+            )}
+          </section>
+        )}
+
         {result && (
           <section style={sectionStyle}>
-            <h2 style={{ fontSize: '0.875rem', marginTop: 0, fontWeight: 'bold' }}>This month</h2>
+            <h2 style={{ fontSize: '0.875rem', marginTop: 0, fontWeight: 'bold' }}>{t.thisMonth}</h2>
             <p style={{ fontSize: '1.5rem', fontWeight: 'bold', margin: '0 0 1rem', color: '#1a3d16' }}>
-              Total: ₹ {Number(result.totalThisMonth).toLocaleString('en-IN')}
+              {t.total}: ₹ {Number(result.totalThisMonth).toLocaleString('en-IN')}
             </p>
             {result.costPerAcre != null && (
-              <p style={{ margin: '0 0 1rem', color: '#2d5a27' }}>Cost per acre: ₹ {result.costPerAcre.toLocaleString('en-IN')}</p>
+              <p style={{ margin: '0 0 1rem', color: '#2d5a27' }}>{t.costPerAcre}: ₹ {result.costPerAcre.toLocaleString('en-IN')}</p>
             )}
 
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>By category</p>
+            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.byCategory}</p>
             <ul style={{ listStyle: 'none', padding: 0, margin: '0 0 1rem' }}>
               {CATEGORIES.map((cat) => {
                 const info = result.categoryBreakdown?.[cat]
                 if (!info || info.amount <= 0) return null
                 const color = info.indicator === 'red' ? '#c53030' : info.indicator === 'orange' ? '#c05621' : '#2d5a27'
+                const label = t[cat] || CATEGORY_LABELS[cat]
                 return (
                   <li key={cat} style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', marginBottom: '0.5rem' }}>
                     <span style={{ width: '12px', height: '12px', borderRadius: '50%', background: color, flexShrink: 0 }} aria-hidden="true" />
-                    <span style={{ flex: 1 }}>{CATEGORY_LABELS[cat]}: ₹ {Number(info.amount).toLocaleString('en-IN')} ({info.percent}%)</span>
+                    <span style={{ flex: 1 }}>{label}: ₹ {Number(info.amount).toLocaleString('en-IN')} ({info.percent}%)</span>
                   </li>
                 )
               })}
             </ul>
 
-            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>Advice</p>
+            <p style={{ fontWeight: 'bold', marginBottom: '0.5rem' }}>{t.advice}</p>
             <ul style={{ paddingLeft: '1.25rem', margin: 0, lineHeight: 1.6, color: '#1a3d16' }}>
               {result.advice.map((line, i) => (
                 <li key={i}>{line}</li>
