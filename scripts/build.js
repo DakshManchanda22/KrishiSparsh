@@ -5,6 +5,7 @@ const path = require('path')
 const root = path.resolve(__dirname, '..')
 const dist = path.join(root, 'dist')
 const waterAdvisorDir = path.join(root, 'water-advisor')
+const expensesDir = path.join(root, 'expenses')
 
 // Clean dist
 if (fs.existsSync(dist)) fs.rmSync(dist, { recursive: true })
@@ -31,10 +32,10 @@ for (const f of mainSiteFiles) {
   const src = path.join(root, f)
   if (fs.existsSync(src)) fs.copyFileSync(src, path.join(dist, f))
 }
-// Copy images / assets from root
+// Copy images / assets from root (exclude water-advisor and expenses apps)
 const rootFiles = fs.readdirSync(root, { withFileTypes: true })
 for (const e of rootFiles) {
-  if (e.isDirectory() && e.name !== 'water-advisor' && e.name !== 'node_modules' && e.name !== 'dist' && e.name !== 'scripts' && e.name !== '.git') {
+  if (e.isDirectory() && e.name !== 'water-advisor' && e.name !== 'expenses' && e.name !== 'node_modules' && e.name !== 'dist' && e.name !== 'scripts' && e.name !== '.git') {
     mainSiteCopy(e.name)
   } else if (e.isFile() && /\.(jpg|jpeg|png|gif|avif|webp|ico|svg)$/i.test(e.name)) {
     fs.copyFileSync(path.join(root, e.name), path.join(dist, e.name))
@@ -45,10 +46,18 @@ for (const e of rootFiles) {
 process.chdir(waterAdvisorDir)
 execSync('npm install', { stdio: 'inherit' })
 execSync('npm run build', { stdio: 'inherit', env: { ...process.env, VITE_APP_BASE: '/water-advisor/' } })
-
-// 3. Copy water-advisor dist to dist/water-advisor
 const waDist = path.join(waterAdvisorDir, 'dist')
 const distWa = path.join(dist, 'water-advisor')
 fs.cpSync(waDist, distWa, { recursive: true })
 
-console.log('Build done: main site at /, Water Advisor at /water-advisor/')
+// 3. Build Expenses React app (standalone module at /expenses/)
+if (fs.existsSync(expensesDir)) {
+  process.chdir(expensesDir)
+  execSync('npm install', { stdio: 'inherit' })
+  execSync('npm run build', { stdio: 'inherit', env: { ...process.env, VITE_APP_BASE: '/expenses/' } })
+  const expDist = path.join(expensesDir, 'dist')
+  const distExp = path.join(dist, 'expenses')
+  fs.cpSync(expDist, distExp, { recursive: true })
+}
+
+console.log('Build done: main site at /, Water Advisor at /water-advisor/, Expenses at /expenses/')

@@ -3,6 +3,8 @@
   "outputDirectory": "dist",
   "rewrites": [
     { "source": "/water-advisor", "destination": "/water-advisor/" },
-    { "source": "/water-advisor/(.*)", "destination": "/water-advisor/index.html" }
+    { "source": "/water-advisor/(.*)", "destination": "/water-advisor/index.html" },
+    { "source": "/expenses", "destination": "/expenses/" },
+    { "source": "/expenses/(.*)", "destination": "/expenses/index.html" }
   ]
 }

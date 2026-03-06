@@ -44,6 +44,8 @@
 </head>
 <body class="bg-surface text-primary font-sans antialiased min-h-screen overflow-x-hidden">
   <script>
+    if (typeof history !== 'undefined' && history.scrollRestoration) history.scrollRestoration = 'manual';
+    window.scrollTo(0, 0);
     if (window.location.hash === '#water') {
       window.location.replace(window.location.pathname.replace(/\/$/, '') + '/water-advisor/');
     }
@@ -63,24 +65,23 @@
           <div id="nav-links-desktop" class="hidden md:flex items-center justify-center gap-1 flex-1">
             <a href="#disease" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.disease">Disease Detection</a>
             <a href="/water-advisor/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.water">Water Advisor</a>
-            <a href="#expenses" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.expenses">Expenses</a>
+            <a href="/expenses/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.expenses">Expenses</a>
             <a href="#schemes" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.schemes">Schemes</a>
           </div>
 
           <div class="flex items-center gap-2">
-            <button type="button" id="lang-toggle" class="text-xs font-medium px-3 py-1.5 rounded-full border border-white/60 text-white hover:bg-white/20 transition-colors" aria-label="Switch language" title="हिंदी / English">हिंदी</button>
             <button type="button" id="mobile-menu-btn" class="md:hidden p-2 rounded-2xl text-white hover:text-green-light transition-colors min-w-[44px] min-h-[44px] flex items-center justify-center" aria-label="Menu" aria-expanded="false">
               <svg class="w-6 h-6 menu-icon-open" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h16"/></svg>
               <svg class="w-6 h-6 menu-icon-close hidden" fill="none" stroke="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"/></svg>
             </button>
-            <a href="#join" class="inline-flex items-center justify-center px-4 sm:px-6 py-3 rounded-full bg-green-deep text-white font-semibold shadow-clay hover:shadow-card-hover transition-shadow focus:outline-none focus:ring-2 focus:ring-green-deep focus:ring-offset-2 focus:ring-offset-white/20 text-sm sm:text-base min-h-[44px]" data-i18n="nav.join">Join Now</a>
+            <button type="button" id="lang-toggle" class="inline-flex items-center justify-center px-4 sm:px-6 py-3 rounded-full bg-green-deep text-white font-semibold shadow-clay hover:shadow-card-hover transition-shadow focus:outline-none focus:ring-2 focus:ring-green-deep focus:ring-offset-2 focus:ring-offset-white/20 text-sm sm:text-base min-h-[44px]" aria-label="Switch language" title="हिंदी / English">हिंदी</button>
           </div>
         </div>
         <!-- Mobile menu: full-width dropdown, shown when hamburger clicked -->
         <div id="mobile-menu" class="mobile-nav md:hidden" aria-hidden="true">
           <a href="#disease" class="mobile-nav-link" data-i18n="nav.disease">Disease Detection</a>
           <a href="/water-advisor/" class="mobile-nav-link" data-i18n="nav.water">Water Advisor</a>
-          <a href="#expenses" class="mobile-nav-link" data-i18n="nav.expenses">Expenses</a>
+          <a href="/expenses/" class="mobile-nav-link" data-i18n="nav.expenses">Expenses</a>
           <a href="#schemes" class="mobile-nav-link" data-i18n="nav.schemes">Schemes</a>
         </div>
         </div>

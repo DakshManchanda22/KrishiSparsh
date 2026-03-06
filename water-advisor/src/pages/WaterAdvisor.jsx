@@ -235,20 +235,19 @@ export default function WaterAdvisor() {
           <nav className="site-nav-links" aria-label="Main">
             <a href={sectionHref('disease')}>{t('navDisease')}</a>
             <a href="/water-advisor/" className="active">{t('navWater')}</a>
-            <a href={sectionHref('expenses')}>{t('navExpenses')}</a>
+            <a href="/expenses/">{t('navExpenses')}</a>
             <a href={sectionHref('schemes')}>{t('navSchemes')}</a>
           </nav>
 
           <div className="site-nav-right">
             <button
               type="button"
-              className="site-nav-lang"
+              className="site-nav-join"
               onClick={() => setLang(isHi ? 'en' : 'hi')}
               aria-label={isHi ? 'Switch to English' : 'Switch to Hindi'}
             >
               {t('langBtn')}
             </button>
-            <a href={sectionHref('join')} className="site-nav-join">{t('navJoin')}</a>
           </div>
         </div>
       </header>
