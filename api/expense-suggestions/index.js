@@ -22,17 +22,18 @@ module.exports = async function handler(req, res) {
   } catch {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
-  const { currentItems, historicalSummary, totalThisMonth, lastMonthTotal, landAcres } = body;
+  const { currentItems, historicalSummary, pastBillsSummary, totalThisMonth, lastMonthTotal, landAcres } = body;
 
-  const prompt = `You are a farm expense advisor. Given the following data, give 3 to 5 short, actionable suggestions to optimize spending or improve record-keeping. Write in a friendly tone. Return a JSON object with a single key "suggestions" which is an array of strings. Example: {"suggestions": ["Suggestion 1", "Suggestion 2"]}
+  const prompt = `You are a farm expense advisor. Given the following data (current bill and historic data from the database), give 3 to 5 short, actionable suggestions to optimize spending or improve record-keeping. Use the historic data to compare trends (e.g. spending more on fertilizer than before). Write in a friendly tone. Return a JSON object with a single key "suggestions" which is an array of strings. Example: {"suggestions": ["Suggestion 1", "Suggestion 2"]}
 
 Current bill / items (user may have edited):
 ${JSON.stringify(currentItems || {}, null, 2)}
 
-${historicalSummary ? `Historical summary:\n${historicalSummary}` : ''}
-${totalThisMonth != null ? `Total this month (₹): ${totalThisMonth}` : ''}
-${lastMonthTotal != null ? `Last month total (₹): ${lastMonthTotal}` : ''}
-${landAcres != null && landAcres !== '' ? `Land (acres): ${landAcres}` : ''}`;
+${historicalSummary ? `Aggregate history:\n${historicalSummary}` : ''}
+${pastBillsSummary ? `\n${pastBillsSummary}` : ''}
+${totalThisMonth != null ? `\nTotal this month (₹): ${totalThisMonth}` : ''}
+${lastMonthTotal != null ? `\nLast month total (₹): ${lastMonthTotal}` : ''}
+${landAcres != null && landAcres !== '' ? `\nLand (acres): ${landAcres}` : ''}`;
 
   const requestBody = {
     contents: [{ role: 'user', parts: [{ text: prompt }] }],

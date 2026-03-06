@@ -365,13 +365,14 @@ export default function ExpenseScanner() {
       let totalThisMonth = null
       let lastMonthTotal = null
       let historicalSummary = ''
+      let pastBillsSummary = ''
+      const uid = userId?.trim() || null
       if (isSupabaseConfigured()) {
         const now = new Date()
         const startThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
         const endThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
         const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
         const endLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
-        const uid = userId?.trim() || null
         let q = supabase.from('expenses').select('amount').gte('created_at', startThisMonth.toISOString()).lte('created_at', endThisMonth.toISOString())
         if (uid) q = q.eq('user_id', uid)
         const { data: thisRows } = await q
@@ -380,11 +381,24 @@ export default function ExpenseScanner() {
         if (uid) q = q.eq('user_id', uid)
         const { data: lastRows } = await q
         lastMonthTotal = (lastRows || []).reduce((s, r) => s + Number(r.amount || 0), 0)
-        historicalSummary = `This month total: ₹${totalThisMonth}. Last month total: ₹${lastMonthTotal}.`
+        historicalSummary = `This month total (from expenses): ₹${totalThisMonth}. Last month total: ₹${lastMonthTotal}.`
+        q = supabase.from('bill_scans').select('id, payload, created_at').order('created_at', { ascending: false }).limit(12)
+        if (uid) q = q.eq('user_id', uid)
+        const { data: pastRows } = await q
+        if (pastRows?.length) {
+          pastBillsSummary = 'Previous scanned bills (historic data):\n' + pastRows.map((b) => {
+            const p = b.payload || {}
+            const total = p.total != null ? `₹${Number(p.total).toLocaleString('en-IN')}` : 'no total'
+            const date = b.created_at ? new Date(b.created_at).toLocaleDateString(undefined, { dateStyle: 'short' }) : ''
+            const cats = p.categories ? Object.entries(p.categories).filter(([, arr]) => Array.isArray(arr) && arr.length > 0).map(([c, arr]) => `${c}: ${arr.length} items`).join('; ') : ''
+            return `- ${date}: ${total}${cats ? ` (${cats})` : ''}`
+          }).join('\n')
+        }
       }
       const body = {
         currentItems: { categories: geminiResult.categories, total: geminiResult.total },
         historicalSummary,
+        pastBillsSummary,
         totalThisMonth,
         lastMonthTotal,
         landAcres: landAcres.trim() || null,
