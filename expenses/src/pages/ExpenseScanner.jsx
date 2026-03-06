@@ -234,17 +234,55 @@ function withIds(categories) {
   return out
 }
 
-function fileToBase64(file) {
+const MAX_IMAGE_DIM = 1024
+const JPEG_QUALITY = 0.65
+
+function compressImageToBase64(file) {
   return new Promise((resolve, reject) => {
-    const reader = new FileReader()
-    reader.onload = () => {
-      const dataUrl = reader.result
-      const base64 = dataUrl.indexOf('base64,') >= 0 ? dataUrl.split('base64,')[1] : dataUrl
-      const mime = file.type || 'image/jpeg'
-      resolve({ imageBase64: base64, mimeType: mime })
+    const img = new Image()
+    const url = URL.createObjectURL(file)
+    img.onload = () => {
+      URL.revokeObjectURL(url)
+      let w = img.width
+      let h = img.height
+      if (w > MAX_IMAGE_DIM || h > MAX_IMAGE_DIM) {
+        if (w > h) {
+          h = Math.round((h * MAX_IMAGE_DIM) / w)
+          w = MAX_IMAGE_DIM
+        } else {
+          w = Math.round((w * MAX_IMAGE_DIM) / h)
+          h = MAX_IMAGE_DIM
+        }
+      }
+      const canvas = document.createElement('canvas')
+      canvas.width = w
+      canvas.height = h
+      const ctx = canvas.getContext('2d')
+      ctx.drawImage(img, 0, 0, w, h)
+      canvas.toBlob(
+        (blob) => {
+          if (!blob) {
+            reject(new Error('Canvas toBlob failed'))
+            return
+          }
+          const reader = new FileReader()
+          reader.onload = () => {
+            const dataUrl = reader.result
+            const base64 = dataUrl.indexOf('base64,') >= 0 ? dataUrl.split('base64,')[1] : dataUrl
+            resolve({ imageBase64: base64, mimeType: 'image/jpeg' })
+          }
+          reader.onerror = reject
+          reader.readAsDataURL(blob)
+        },
+        'image/jpeg',
+        JPEG_QUALITY
+      )
     }
-    reader.onerror = reject
-    reader.readAsDataURL(file)
+    img.onerror = () => {
+      URL.revokeObjectURL(url)
+      reject(new Error('Image load failed'))
+    }
+    img.src = url
   })
 }
 
@@ -379,7 +417,7 @@ export default function ExpenseScanner() {
     setGeminiResult(null)
     setSuggestions(null)
     try {
-      const { imageBase64, mimeType } = await fileToBase64(file)
+      const { imageBase64, mimeType } = await compressImageToBase64(file)
       let scanRes
       try {
         scanRes = await fetch(`${API_BASE}/api/scan-bill`, {
@@ -416,109 +454,13 @@ export default function ExpenseScanner() {
         setLoading(false)
         return
       }
-    } catch (_) {
-      /* fall back to Tesseract */
-    }
-    if (!isSupabaseConfigured()) {
-      setError(t.supabaseError)
+      setError(scanData?.error || t.genericError)
       setLoading(false)
       return
-    }
-    let currentBillAmount = null
-    try {
-      const Tesseract = await import('tesseract.js')
-      const { data } = await Tesseract.recognize(file, 'eng', { logger: () => {} })
-      const rawText = data?.text || ''
-      currentBillAmount = extractAmount(rawText)
-      if (currentBillAmount == null || currentBillAmount <= 0) {
-        setError(t.noTotal)
-        setLoading(false)
-        return
-      }
-      const category = categorizeExpense(rawText)
-      const uid = userId?.trim() || null
-      const { error: insertErr } = await supabase.from('expenses').insert({
-        user_id: uid,
-        amount: currentBillAmount,
-        category,
-        raw_text: rawText.slice(0, 5000),
-      })
-      if (insertErr) {
-        setError(insertErr.message || t.saveError)
-        setLoading(false)
-        return
-      }
-
-      const now = new Date()
-      const startThisMonth = new Date(now.getFullYear(), now.getMonth(), 1)
-      const endThisMonth = new Date(now.getFullYear(), now.getMonth() + 1, 0, 23, 59, 59)
-      const startLastMonth = new Date(now.getFullYear(), now.getMonth() - 1, 1)
-      const endLastMonth = new Date(now.getFullYear(), now.getMonth(), 0, 23, 59, 59)
-
-      let query = supabase
-        .from('expenses')
-        .select('id, amount, category, created_at')
-        .gte('created_at', startThisMonth.toISOString())
-        .lte('created_at', endThisMonth.toISOString())
-      if (uid) query = query.eq('user_id', uid)
-      const { data: thisMonthRows, error: e1 } = await query.order('created_at', { ascending: false })
-      if (e1) {
-        setError(e1.message || t.loadError)
-        setLoading(false)
-        return
-      }
-
-      query = supabase
-        .from('expenses')
-        .select('amount')
-        .gte('created_at', startLastMonth.toISOString())
-        .lte('created_at', endLastMonth.toISOString())
-      if (uid) query = query.eq('user_id', uid)
-      const { data: lastMonthRows, error: e2 } = await query
-      const lastMonthTotal = e2 ? null : (lastMonthRows || []).reduce((s, r) => s + Number(r.amount || 0), 0)
-
-      const totalThisMonth = (thisMonthRows || []).reduce((s, r) => s + Number(r.amount || 0), 0)
-      const categoryBreakdown = {}
-      CATEGORIES.forEach((c) => {
-        categoryBreakdown[c] = { amount: 0, count: 0, percent: 0, indicator: 'green' }
-      })
-      ;(thisMonthRows || []).forEach((r) => {
-        const c = r.category || 'other'
-        if (!categoryBreakdown[c]) categoryBreakdown[c] = { amount: 0, count: 0, percent: 0, indicator: 'green' }
-        categoryBreakdown[c].amount += Number(r.amount || 0)
-        categoryBreakdown[c].count += 1
-      })
-      Object.keys(categoryBreakdown).forEach((c) => {
-        const info = categoryBreakdown[c]
-        info.percent = totalThisMonth > 0 ? Math.round((info.amount / totalThisMonth) * 100) : 0
-        info.indicator = getIndicator(info.percent, c)
-      })
-
-      const count = (thisMonthRows || []).length
-      const monthlyAvg = count > 0 ? totalThisMonth / count : null
-      const landNum = landAcres ? parseFloat(landAcres) : null
-      const costPerAcre = landNum != null && landNum > 0 && totalThisMonth > 0
-        ? Math.round((totalThisMonth / landNum) * 100) / 100
-        : null
-
-      const advice = generateAdvice({
-        totalThisMonth,
-        categoryBreakdown,
-        lastMonthTotal,
-        currentBillAmount,
-        monthlyAvg,
-      })
-
-      setResult({
-        totalThisMonth,
-        categoryBreakdown,
-        costPerAcre,
-        advice,
-      })
     } catch (err) {
       setError(err?.message || t.genericError)
-    } finally {
       setLoading(false)
+      return
     }
   }
 

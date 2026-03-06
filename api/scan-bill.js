@@ -1,6 +1,6 @@
 const GEMINI_URL = 'https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent';
 
-const PROMPT = `You are an expert at reading retail/farm bills. Look at the bill image and extract every line item.
+const TEXT_PROMPT = `You are an expert at reading retail/farm bills. Below is raw text from a bill (OCR output). Extract every line item from this text.
 
 Classify each item into exactly one category: fertilizer, seed, labour, pesticide, transport, other.
 
@@ -16,7 +16,10 @@ Return a valid JSON object only, no markdown or extra text, with this shape:
   },
   "total": number or null
 }
-Use empty arrays for categories with no items. quantity can be a number or string like "2". amount is in rupees. If total is visible on the bill, set "total" to that number.`;
+Use empty arrays for categories with no items. quantity can be a number or string like "2". amount is in rupees. If total is visible in the text, set "total" to that number.
+
+Bill text:
+`;
 
 function cors(res, req) {
   const origin = req.headers.origin || '*';
@@ -39,18 +42,24 @@ module.exports = async function handler(req, res) {
   } catch {
     return res.status(400).json({ error: 'Invalid JSON body' });
   }
-  const { imageBase64, mimeType = 'image/jpeg' } = body;
-  if (!imageBase64) return res.status(400).json({ error: 'imageBase64 required' });
+  const { text: billText, imageBase64, mimeType = 'image/jpeg' } = body;
 
-  const parts = [
-    {
-      inline_data: {
-        mime_type: mimeType,
-        data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+  let parts;
+  if (billText && typeof billText === 'string' && billText.trim().length > 0) {
+    parts = [{ text: TEXT_PROMPT + billText.trim() }];
+  } else if (imageBase64) {
+    parts = [
+      {
+        inline_data: {
+          mime_type: mimeType,
+          data: imageBase64.replace(/^data:image\/\w+;base64,/, ''),
+        },
       },
-    },
-    { text: PROMPT },
-  ];
+      { text: 'You are an expert at reading retail/farm bills. Look at the bill image and extract every line item. Classify each item into exactly one category: fertilizer, seed, labour, pesticide, transport, other. Return a valid JSON object only, no markdown, with keys: categories (object with fertilizer, seed, labour, pesticide, transport, other as arrays of {name, quantity, unit, amount}), and total (number or null). Use empty arrays for empty categories.' },
+    ];
+  } else {
+    return res.status(400).json({ error: 'Either "text" (OCR bill text) or "imageBase64" required' });
+  }
 
   try {
     const response = await fetch(`${GEMINI_URL}?key=${encodeURIComponent(key)}`, {
