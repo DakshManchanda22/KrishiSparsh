@@ -14,7 +14,9 @@ from pathlib import Path
 
 import torch
 from fastapi import FastAPI, File, UploadFile, HTTPException
-from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import JSONResponse, Response
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from PIL import Image
 from torchvision import transforms
 
@@ -29,6 +31,32 @@ CORS_ORIGINS = [
     "http://127.0.0.1:5173",
 ]
 
+
+def _cors_headers(origin) -> dict:
+    allow_origin = origin if origin in CORS_ORIGINS else CORS_ORIGINS[0]
+    return {
+        "Access-Control-Allow-Origin": allow_origin,
+        "Access-Control-Allow-Methods": "GET, POST, OPTIONS",
+        "Access-Control-Allow-Headers": "Content-Type, Authorization",
+        "Access-Control-Max-Age": "86400",
+    }
+
+
+class AddCORSHeadersMiddleware(BaseHTTPMiddleware):
+    """Add CORS headers to every response (including 500) so browser always receives them."""
+
+    async def dispatch(self, request: Request, call_next):
+        if request.method == "OPTIONS":
+            return Response(
+                status_code=200,
+                headers=_cors_headers(request.headers.get("origin")),
+            )
+        response = await call_next(request)
+        origin = request.headers.get("origin")
+        for k, v in _cors_headers(origin).items():
+            response.headers[k] = v
+        return response
+
 # Same as training: 256x256 then ToTensor
 INFERENCE_TRANSFORM = transforms.Compose([
     transforms.Resize((256, 256)),
@@ -40,15 +68,30 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 app = FastAPI(title="Plant Disease Prediction API")
 
-app.add_middleware(
-    CORSMiddleware,
-    allow_origins=CORS_ORIGINS,
-    allow_credentials=True,
-    allow_methods=["GET", "POST", "OPTIONS"],
-    allow_headers=["*"],
-)
+# Must be first: add CORS to every response including 5xx errors
+app.add_middleware(AddCORSHeadersMiddleware)
 
 _model = None
+
+
+@app.exception_handler(HTTPException)
+async def http_exception_handler(request: Request, exc: HTTPException):
+    """Add CORS to HTTPException responses (400, 503, etc.)."""
+    return JSONResponse(
+        status_code=exc.status_code,
+        content={"detail": exc.detail},
+        headers=_cors_headers(request.headers.get("origin")),
+    )
+
+
+@app.exception_handler(Exception)
+async def global_exception_handler(request: Request, exc: Exception):
+    """Return 500 with CORS headers so the browser can read the error."""
+    return JSONResponse(
+        status_code=500,
+        content={"detail": "Internal server error", "error": str(exc)},
+        headers=_cors_headers(request.headers.get("origin")),
+    )
 
 
 def get_model():

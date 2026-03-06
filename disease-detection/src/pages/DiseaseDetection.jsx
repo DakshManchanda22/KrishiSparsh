@@ -53,7 +53,15 @@ export default function DiseaseDetection() {
       })
       if (!res.ok) {
         const text = await res.text()
-        throw new Error(text || `Request failed (${res.status})`)
+        let msg = `Request failed (${res.status})`
+        try {
+          const j = JSON.parse(text)
+          if (j.detail) msg = typeof j.detail === 'string' ? j.detail : JSON.stringify(j.detail)
+          if (j.error) msg += ': ' + j.error
+        } catch {
+          if (text) msg = text
+        }
+        throw new Error(msg)
       }
       const data = await res.json()
       setResult(data)
@@ -79,10 +87,10 @@ export default function DiseaseDetection() {
       </header>
 
       <main className="page-container">
-        <h1 style={{ fontSize: '1.75rem', fontWeight: 700, marginBottom: '0.5rem', color: '#fff', textShadow: '0 1px 2px rgba(0,0,0,0.2)' }}>
+        <h1 className="page-title">
           Plant Disease Detection
         </h1>
-        <p style={{ marginBottom: '1.5rem', color: 'rgba(255,255,255,0.95)' }}>
+        <p className="page-subtitle">
           Upload a leaf or plant image to detect possible disease using AI.
         </p>
 
@@ -109,7 +117,7 @@ export default function DiseaseDetection() {
                 />
               </div>
             ) : null}
-            <p style={{ margin: 0, color: 'var(--primary)' }}>
+            <p style={{ margin: 0, color: 'var(--text)' }}>
               {file ? 'Click or drag a new image to replace' : 'Click or drag an image here'}
             </p>
           </div>
@@ -134,7 +142,7 @@ export default function DiseaseDetection() {
           {error && <div className="error-msg">{error}</div>}
 
           {result && (
-            <div className="card" style={{ marginTop: '1rem', background: 'rgba(111, 135, 75, 0.08)' }}>
+            <div className="card result-card">
               <p className="result-disease">{result.disease}</p>
               <p className="result-confidence">
                 Confidence: {(result.confidence * 100).toFixed(1)}%
