@@ -103,7 +103,7 @@ def get_model():
                 "Extract FinalModel.pth from FinalModel.zip or FinalModel.rar."
             )
         model = CNN_NeuralNet(in_channels=3, num_diseases=len(CLASSES))
-        state = torch.load(MODEL_PATH, map_location=DEVICE)
+        state = torch.load(MODEL_PATH, map_location=DEVICE, weights_only=False)
         if isinstance(state, dict) and "state_dict" in state:
             model.load_state_dict(state["state_dict"], strict=True)
         else:

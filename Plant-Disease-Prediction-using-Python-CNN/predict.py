@@ -23,7 +23,7 @@ DEVICE = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 def load_model(path: str = MODEL_PATH):
     """Load trained model. Supports full checkpoint or state_dict only."""
     model = CNN_NeuralNet(in_channels=3, num_diseases=len(CLASSES))
-    state = torch.load(path, map_location=DEVICE)
+    state = torch.load(path, map_location=DEVICE, weights_only=False)
     if isinstance(state, dict) and "state_dict" in state:
         model.load_state_dict(state["state_dict"], strict=True)
     else:
