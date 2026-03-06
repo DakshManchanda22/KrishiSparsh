@@ -299,6 +299,7 @@ export default function ExpenseScanner() {
   const [openCategory, setOpenCategory] = useState(null)
   const [landAcres, setLandAcres] = useState('')
   const [pastBills, setPastBills] = useState([])
+  const [pastBillsLoadError, setPastBillsLoadError] = useState(null)
   const [expandedBillId, setExpandedBillId] = useState(null)
   const [deletingId, setDeletingId] = useState(null)
   const [userId] = useState(() => {
@@ -317,10 +318,16 @@ export default function ExpenseScanner() {
 
   const loadPastBills = useCallback(async () => {
     if (!isSupabaseConfigured()) return
+    setPastBillsLoadError(null)
     const uid = userId?.trim() || null
     let q = supabase.from('bill_scans').select('id, payload, created_at').order('created_at', { ascending: false })
     if (uid) q = q.eq('user_id', uid)
-    const { data } = await q
+    const { data, error } = await q
+    if (error) {
+      setPastBillsLoadError(error.message || 'Could not load past bills')
+      setPastBills([])
+      return
+    }
     setPastBills(data || [])
   }, [userId])
 
@@ -449,7 +456,11 @@ export default function ExpenseScanner() {
             user_id: uid,
             payload: { categories: scanData.categories, total: scanData.total },
           })
-          if (!insertErr) loadPastBills()
+          if (insertErr) {
+            setPastBillsLoadError(insertErr.message || 'Could not save to past bills. Run the bill_scans migration in Supabase.')
+          } else {
+            loadPastBills()
+          }
         }
         setLoading(false)
         return
@@ -663,6 +674,9 @@ export default function ExpenseScanner() {
         {isSupabaseConfigured() && (
           <section style={sectionStyle}>
             <h2 style={{ fontSize: '1rem', marginTop: 0, fontWeight: 'bold', marginBottom: '0.75rem' }}>{t.pastBills}</h2>
+            {pastBillsLoadError && (
+              <p style={{ color: '#b45309', margin: '0 0 0.5rem', fontSize: '0.9rem' }} role="alert">{pastBillsLoadError}</p>
+            )}
             {pastBills.length === 0 ? (
               <p style={{ color: '#2d5a27', margin: 0, fontSize: '0.95rem' }}>{t.noPastBills}</p>
             ) : (
