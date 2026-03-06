@@ -36,6 +36,17 @@ body.bg-surface {
   color: #fff;
 }
 
+/* Hero CTA: solid background so button is clearly visible on hero image */
+.hero-cta-primary {
+  background-color: #256334 !important;
+  color: #fff !important;
+  box-shadow: 0 4px 14px rgba(0, 0, 0, 0.2), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+.hero-cta-primary:hover {
+  background-color: #1e5029 !important;
+  box-shadow: 0 6px 20px rgba(0, 0, 0, 0.25), inset 0 1px 0 rgba(255, 255, 255, 0.2);
+}
+
 /* Tailwind utility override */
 .rounded-soft {
   border-radius: 24px;
