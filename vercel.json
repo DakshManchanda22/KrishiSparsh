@@ -5,6 +5,8 @@
     { "source": "/water-advisor", "destination": "/water-advisor/" },
     { "source": "/water-advisor/(.*)", "destination": "/water-advisor/index.html" },
     { "source": "/expenses", "destination": "/expenses/" },
-    { "source": "/expenses/(.*)", "destination": "/expenses/index.html" }
+    { "source": "/expenses/(.*)", "destination": "/expenses/index.html" },
+    { "source": "/disease-detection", "destination": "/disease-detection/" },
+    { "source": "/disease-detection/(.*)", "destination": "/disease-detection/index.html" }
   ]
 }

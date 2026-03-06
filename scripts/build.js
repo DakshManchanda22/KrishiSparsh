@@ -11,6 +11,7 @@ const root = fs.existsSync(path.join(cwd, 'package.json')) && fs.existsSync(path
 const dist = path.join(scriptRoot, 'dist')
 const waterAdvisorDir = path.join(scriptRoot, 'water-advisor')
 const expensesDir = path.join(scriptRoot, 'expenses')
+const diseaseDetectionDir = path.join(scriptRoot, 'disease-detection')
 
 // Clean dist
 if (fs.existsSync(dist)) fs.rmSync(dist, { recursive: true })
@@ -62,7 +63,7 @@ for (const name of imageAssets) {
 // Copy any other root-level images and non-app directories
 const rootFiles = fs.readdirSync(root, { withFileTypes: true })
 for (const e of rootFiles) {
-  if (e.isDirectory() && e.name !== 'water-advisor' && e.name !== 'expenses' && e.name !== 'node_modules' && e.name !== 'dist' && e.name !== 'scripts' && e.name !== '.git') {
+  if (e.isDirectory() && e.name !== 'water-advisor' && e.name !== 'expenses' && e.name !== 'disease-detection' && e.name !== 'node_modules' && e.name !== 'dist' && e.name !== 'scripts' && e.name !== '.git') {
     mainSiteCopy(e.name)
   } else if (e.isFile() && /\.(jpg|jpeg|png|gif|avif|webp|ico|svg)$/i.test(e.name)) {
     const dest = path.join(dist, e.name)
@@ -94,4 +95,14 @@ if (fs.existsSync(expensesDir)) {
   fs.cpSync(expDist, distExp, { recursive: true })
 }
 
-console.log('Build done: main site at /, Water Advisor at /water-advisor/, Expenses at /expenses/')
+// 4. Build Disease Detection React app (standalone at /disease-detection/)
+if (fs.existsSync(diseaseDetectionDir)) {
+  process.chdir(diseaseDetectionDir)
+  execSync('npm install', { stdio: 'inherit' })
+  execSync('npm run build', { stdio: 'inherit', env: { ...process.env, VITE_APP_BASE: '/disease-detection/' } })
+  const ddDist = path.join(diseaseDetectionDir, 'dist')
+  const distDd = path.join(dist, 'disease-detection')
+  fs.cpSync(ddDist, distDd, { recursive: true })
+}
+
+console.log('Build done: main site at /, Water Advisor at /water-advisor/, Expenses at /expenses/, Disease Detection at /disease-detection/')

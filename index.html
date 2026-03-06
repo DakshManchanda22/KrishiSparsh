@@ -49,6 +49,9 @@
     if (window.location.hash === '#water') {
       window.location.replace(window.location.pathname.replace(/\/$/, '') + '/water-advisor/');
     }
+    if (window.location.hash === '#disease') {
+      window.location.replace(window.location.pathname.replace(/\/$/, '') + '/disease-detection/');
+    }
   </script>
   <!-- Hero: height from image only; grid will start directly at its bottom -->
   <section id="home" class="relative w-full">
@@ -58,7 +61,7 @@
           <a href="#" class="flex items-center shrink-0 nav-brand text-lg font-semibold text-white">कृषिSparsh</a>
 
           <div id="nav-links-desktop" class="hidden md:flex items-center justify-center gap-1 flex-1">
-            <a href="#disease" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.disease">Disease Detection</a>
+            <a href="/disease-detection/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.disease">Disease Detection</a>
             <a href="/water-advisor/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.water">Water Advisor</a>
             <a href="/expenses/" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.expenses">Expenses</a>
             <a href="#schemes" class="nav-link px-4 py-2 rounded-2xl text-white font-medium hover:text-green-light transition-colors" data-i18n="nav.schemes">Schemes</a>
@@ -74,7 +77,7 @@
         </div>
         <!-- Mobile menu: full-width dropdown, shown when hamburger clicked -->
         <div id="mobile-menu" class="mobile-nav md:hidden" aria-hidden="true">
-          <a href="#disease" class="mobile-nav-link" data-i18n="nav.disease">Disease Detection</a>
+          <a href="/disease-detection/" class="mobile-nav-link" data-i18n="nav.disease">Disease Detection</a>
           <a href="/water-advisor/" class="mobile-nav-link" data-i18n="nav.water">Water Advisor</a>
           <a href="/expenses/" class="mobile-nav-link" data-i18n="nav.expenses">Expenses</a>
           <a href="#schemes" class="mobile-nav-link" data-i18n="nav.schemes">Schemes</a>
