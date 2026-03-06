@@ -2,6 +2,27 @@ import { useState, useRef } from 'react'
 
 const API_URL = import.meta.env.VITE_DISEASE_API_URL || 'https://plant-disease-api-f7nm.onrender.com'
 
+const sectionStyle = {
+  background: 'rgba(255, 255, 255, 0.6)',
+  border: '4px solid #2d5a27',
+  borderRadius: '8px',
+  boxShadow: '4px 4px 0 rgba(45, 90, 39, 0.3)',
+  padding: '1.25rem',
+  marginBottom: '1.5rem',
+}
+
+const buttonBase = {
+  padding: '12px 20px',
+  minHeight: '44px',
+  border: '4px solid #2d5a27',
+  borderRadius: '8px',
+  boxShadow: '4px 4px 0 rgba(45, 90, 39, 0.3)',
+  fontWeight: 'bold',
+  cursor: 'pointer',
+  transition: 'transform 0.1s ease, box-shadow 0.1s ease',
+  fontSize: '1rem',
+}
+
 export default function DiseaseDetection() {
   const [file, setFile] = useState(null)
   const [preview, setPreview] = useState(null)
@@ -76,7 +97,12 @@ export default function DiseaseDetection() {
     <>
       <header className="site-nav">
         <div className="site-nav-inner">
-          <a href="/" className="site-nav-logo">कृषिSparsh</a>
+          <a href="/" className="site-nav-logo" aria-label="Home">
+            <span className="site-nav-logo-icon" aria-hidden="true">
+              <svg width="20" height="20" fill="currentColor" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 2C8 2 5 5.5 5 9.5c0 4 3 8.5 7 12.5 4-4 7-8.5 7-12.5C19 5.5 16 2 12 2zm0 11c-1.4 0-2.5-1.1-2.5-2.5S10.6 8 12 8s2.5 1.1 2.5 2.5S13.4 13 12 13z"/></svg>
+            </span>
+            <span className="site-nav-logo-text">कृषिSparsh</span>
+          </a>
           <nav className="site-nav-links">
             <a href="/disease-detection/" className="active">Disease Detection</a>
             <a href="/water-advisor/">Water Advisor</a>
@@ -86,15 +112,27 @@ export default function DiseaseDetection() {
         </div>
       </header>
 
-      <main className="page-container">
-        <h1 className="page-title">
-          Plant Disease Detection
-        </h1>
-        <p className="page-subtitle">
-          Upload a leaf or plant image to detect possible disease using AI.
-        </p>
+      <main style={{ maxWidth: '800px', margin: '0 auto', paddingTop: '80px' }}>
+        {/* Heading – same style as Water Advisor */}
+        <section style={{ ...sectionStyle, textAlign: 'center', padding: '2rem 1rem' }}>
+          <h1
+            style={{
+              fontFamily: "var(--font-pixel), 'Courier New', monospace",
+              fontSize: 'clamp(1rem, 4vw, 1.5rem)',
+              color: '#1a3d16',
+              margin: '0 0 0.75rem',
+              lineHeight: 1.6,
+            }}
+          >
+            Plant Disease Detection
+          </h1>
+          <p style={{ margin: 0, fontSize: '1rem', color: '#2d5a27' }}>
+            Upload a leaf or plant image to detect possible disease using AI.
+          </p>
+        </section>
 
-        <div className="card">
+        {/* Upload & predict – Minecraft-style section */}
+        <section style={sectionStyle}>
           <div
             className={`upload-zone ${dragover ? 'dragover' : ''}`}
             onDrop={onDrop}
@@ -113,11 +151,11 @@ export default function DiseaseDetection() {
                 <img
                   src={preview}
                   alt="Preview"
-                  style={{ maxWidth: '100%', maxHeight: 240, objectFit: 'contain', borderRadius: '0.5rem' }}
+                  style={{ maxWidth: '100%', maxHeight: 240, objectFit: 'contain', borderRadius: '8px', border: '2px solid #2d5a27' }}
                 />
               </div>
             ) : null}
-            <p style={{ margin: 0, color: 'var(--text)' }}>
+            <p style={{ margin: 0, color: '#1a3d16', fontWeight: 'bold' }}>
               {file ? 'Click or drag a new image to replace' : 'Click or drag an image here'}
             </p>
           </div>
@@ -125,9 +163,16 @@ export default function DiseaseDetection() {
           <div style={{ marginTop: '1rem', display: 'flex', justifyContent: 'center' }}>
             <button
               type="button"
-              className="btn-primary"
               onClick={predict}
               disabled={loading || !file}
+              style={{
+                ...buttonBase,
+                background: '#A8EB9D',
+                color: '#1a3d16',
+              }}
+              onMouseDown={(e) => (e.currentTarget.style.transform = 'translate(2px, 2px)')}
+              onMouseUp={(e) => (e.currentTarget.style.transform = '')}
+              onMouseLeave={(e) => (e.currentTarget.style.transform = '')}
             >
               {loading ? (
                 <span style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}>
@@ -142,14 +187,22 @@ export default function DiseaseDetection() {
           {error && <div className="error-msg">{error}</div>}
 
           {result && (
-            <div className="card result-card">
+            <div
+              style={{
+                ...sectionStyle,
+                marginTop: '1rem',
+                background: 'rgba(168, 235, 157, 0.5)',
+                borderColor: '#1a3d16',
+                boxShadow: '4px 4px 0 rgba(26, 61, 22, 0.4)',
+              }}
+            >
               <p className="result-disease">{result.disease}</p>
               <p className="result-confidence">
                 Confidence: {(result.confidence * 100).toFixed(1)}%
               </p>
             </div>
           )}
-        </div>
+        </section>
       </main>
     </>
   )
